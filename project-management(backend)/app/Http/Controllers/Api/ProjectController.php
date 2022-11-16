@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProjectDetailResource;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
+use App\Models\ProjectDetail;
+use App\Models\ProjectName;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,19 +32,34 @@ class ProjectController extends Controller
             $project = $project->where('name', 'like', '%' . request()->q . '%');
         })->orderBy('number')->paginate(10);
 
+        //ProjectDetail::whereRaw('project_id = "107" AND project_name_id = 7')->value('id');
+
         //return with Api Resource
         return new ProjectResource(true, 'List Data Project Detail', $project);
     }
 
-    public function searchBy( $number, $startDate, $endDate)
+    public function searchBy($status, $number, $startDate, $endDate)
+    {
+        if ($status != -1) {
+            $projects = Project::with('projectDetails.projectName')
+                ->whereRaw('number LIKE "%' . $number . '%" AND DATE_FORMAT(projects.created_at, "%Y-%m-%d") BETWEEN "' . $startDate . '" AND "' . $endDate . '" AND status = ' . $status)
+                ->orderBy('number')
+                ->paginate(10);
+        } else {
+            $projects = Project::with('projectDetails.projectName')
+                ->whereRaw('number LIKE "%' . $number . '%" AND DATE_FORMAT(projects.created_at, "%Y-%m-%d") BETWEEN "' . $startDate . '" AND "' . $endDate . '"')
+                ->orderBy('number')
+                ->paginate(10);
+        }
+        //return with Api Resource
+        return new ProjectResource(true, 'List Data Project Detail', $projects);
+    }
+
+    public function searchByName($name)
     {
         $projects = Project::with('projectDetails.projectName')
-                    ->whereRaw('number LIKE "%'.$number.'%" AND DATE_FORMAT(projects.created_at, "%Y-%m-%d") BETWEEN "'.$startDate.'" AND "'.$endDate.'"')
-                    ->orderBy('number')
-                    ->paginate(10);
-                    
-                    
-
+            ->whereRaw('project_name = "' . $name . '"')
+            ->first();
         //return with Api Resource
         return new ProjectResource(true, 'List Data Project Detail', $projects);
     }
@@ -64,15 +82,141 @@ class ProjectController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, ProjectDetail $projectDetail)
     {
-        
+        $last_project = Project::orderBy('id', 'desc')->first();
+        $last_sequence = ProjectDetail::orderBy('id', 'desc')->first()->sequence ?? 0;
+        $sequence = str_pad($last_sequence + 1, $last_sequence);
+
+
+
+
+        if ($last_project != null) {
+            if ($request->project_name == $last_project->project_name) {
+
+                $selected_projectDetail_id = ProjectDetail::whereRaw('project_id = "' . $last_project->id . '" AND project_name_id = "' . $request->project_name_id . '"')->value('id');
+                if ($selected_projectDetail_id != null) {
+                    $update_sequence = ProjectDetail::whereId($selected_projectDetail_id)->first()->sequence;
+                    $validator = Validator::make($request->all(), [
+
+                        'project_name'     => 'required',
+                        'status'     => 'required|integer',
+                        'note' => 'required',
+                        'project_name_id'   => 'required',
+                        'project_status'   => 'required',
+                        'document_attch'   => 'required',
+                        'project_note'   => 'required',
+                    ]);
+
+                    if ($validator->fails()) {
+
+                        return response()->json($validator->errors(), 422);
+                    }
+
+                    if ($request->hasFile('document_attch')) {
+                        $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+                        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+                        $extension = $request->file('document_attch')->getClientOriginalExtension();
+                        $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+
+                        $document_attch = $request->file('document_attch');
+                        $document_attch->storeAs('public/document', $filenameSimpan);
+
+                        ProjectDetail::whereId($selected_projectDetail_id)
+                            ->update([
+                                'project_id'   => $last_project->id,
+                                'project_name_id'   => $request->project_name_id,
+                                'sequence'   => $update_sequence,
+                                'project_status'   => $request->project_status,
+                                'document_attch'   => $filenameSimpan,
+                                'project_note'   => $request->project_note,
+                            ]);
+                    } else {
+                        ProjectDetail::whereId($selected_projectDetail_id)
+                            ->update([
+                                'project_id'   => $last_project->id,
+                                'project_name_id'   => $request->project_name_id,
+                                'sequence'   => $update_sequence,
+                                'project_status'   => $request->project_status,
+                                'document_attch'   => "-",
+                                'project_note'   => $request->project_note,
+                            ]);
+                    }
+
+                    if ($projectDetail) {
+                        return new ProjectDetailResource(true, "Data Project Detail Berhasil di update",null);
+                    } else {
+                        return new ProjectDetailResource(true, "Data Project Detail gagal di update", null);
+                    }
+                } else {
+                    $validator = Validator::make($request->all(), [
+
+                        'project_name'     => 'required',
+                        'status'     => 'required|integer',
+                        'note' => 'required',
+                        'project_name_id'   => 'required',
+                        'project_status'   => 'required',
+                        'document_attch'   => 'required',
+                        'project_note'   => 'required',
+                    ]);
+
+                    if ($validator->fails()) {
+
+                        return response()->json($validator->errors(), 422);
+                    }
+
+
+
+                    if ($request->hasFile('document_attch')) {
+                        $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+                        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+                        $extension = $request->file('document_attch')->getClientOriginalExtension();
+                        $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+
+                        $document_attch = $request->file('document_attch');
+                        $document_attch->storeAs('public/document', $filenameSimpan);
+
+                        $projectDetail = ProjectDetail::create([
+
+                            'project_id'   => $last_project->id,
+                            'project_name_id'   => $request->project_name_id,
+                            'sequence'   => $sequence,
+                            'project_status'   => $request->project_status,
+                            'document_attch'   => $filenameSimpan,
+                            'project_note'   => $request->project_note,
+
+                        ]);
+                    } else {
+                        $projectDetail = ProjectDetail::create([
+
+                            'project_id'   => $last_project->id,
+                            'project_name_id'   => $request->project_name_id,
+                            'sequence'   => $sequence,
+                            'project_status'   => $request->project_status,
+                            'document_attch'   => "-",
+                            'project_note'   => $request->project_note,
+
+                        ]);
+                    }
+
+                    if ($projectDetail) {
+                        return new ProjectDetailResource(true, "Data Project Detail Berhasil di simpan", $projectDetail);
+                    } else {
+                        return new ProjectDetailResource(true, "Data Project Detail gagal di simpan", null);
+                    }
+                }
+            }
+        }
 
         $validator = Validator::make($request->all(), [
 
             'project_name'     => 'required|unique:projects',
             'status'     => 'required|integer',
-
+            'note' => 'required',
+            'project_name_id'   => 'required',
+            'project_status'   => 'required',
+            'document_attch'   => 'required',
+            'project_note'   => 'required',
         ]);
 
 
@@ -82,11 +226,12 @@ class ProjectController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $number = IdGenerator::generate(['table' => 'projects','field'=>'number', 'length' => 14, 'prefix' =>'PRJ-'.date("ym")."-"]);
-        
-        
-       //create project
+        $last_sequence = ProjectDetail::orderBy('id', 'desc')->first()->sequence ?? 0;
+        $number = IdGenerator::generate(['table' => 'projects', 'field' => 'number', 'length' => 14, 'prefix' => 'PRJ-' . date("ym") . "-"]);
+        $projectName = ProjectName::pluck('id');
+        $sequence = str_pad($last_sequence + 1, $last_sequence);
 
+        //create project
         $project = Project::create([
 
             'number' => $number,
@@ -95,25 +240,125 @@ class ProjectController extends Controller
 
             'status' => $request->status,
 
-            'prefix_number' => 'PRJ/'.date("ym"),
+            'note' => $request->note,
+
+            'prefix_number' => 'PRJ/' . date("ym"),
 
         ]);
 
 
+        $project_id = $project->id;
+        if ($request->hasFile('document_attch')) {
+            $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('document_attch')->getClientOriginalExtension();
+            $filenameSimpan = $filename . '_' . time() . '.' . $extension;
 
-        if ($project) {
+            $document_attch = $request->file('document_attch');
+            $document_attch->storeAs('public/document', $filenameSimpan);
 
-            //return success with Api Resource
-            
+            $projectDetail = ProjectDetail::create([
 
-            return new ProjectResource(true, 'Data Project Berhasil Disimpan!', $project);
+                'project_id'   => $project_id,
+                'project_name_id'   => $request->project_name_id,
+                'sequence'   => $sequence,
+                'project_status'   => $request->project_status,
+                'document_attch'   => $filenameSimpan,
+                'project_note'   => $request->project_note,
+
+            ]);
+        } else {
+            $projectDetail = ProjectDetail::create([
+
+                'project_id'   => $project_id,
+                'project_name_id'   => $request->project_name_id,
+                'sequence'   => $sequence,
+                'project_status'   => $request->project_status,
+                'document_attch'   => "-",
+                'project_note'   => $request->project_note,
+
+            ]);
         }
 
+        // foreach ($projectName as $value) {
+        //     $sequence++;
+        //     if ($value == $request->project_name_id) {
 
+        //         if ($request->hasFile('document_attch')) {
+        //             $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+        //             $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+        //             $extension = $request->file('document_attch')->getClientOriginalExtension();
+        //             $filenameSimpan = $filename . '_' . time() . '.' . $extension;
 
-        //return failed with Api Resource
+        //             $document_attch = $request->file('document_attch');
+        //             $document_attch->storeAs('public/document', $filenameSimpan);
 
-        return new ProjectResource(false, 'Data Project Gagal Disimpan!', null);
+        //             $projectDetail = ProjectDetail::create([
+
+        //                 'project_id'   => $project_id,
+        //                 'project_name_id'   => $request->project_name_id,
+        //                 'sequence'   => $sequence,
+        //                 'project_status'   => $request->project_status,
+        //                 'document_attch'   => $filenameSimpan,
+        //                 'project_note'   => $request->note,
+
+        //             ]);
+        //         } else {
+        //             $projectDetail = ProjectDetail::create([
+
+        //                 'project_id'   => $project_id,
+        //                 'project_name_id'   => $request->project_name_id,
+        //                 'sequence'   => $sequence,
+        //                 'project_status'   => $request->project_status,
+        //                 'document_attch'   => "-",
+        //                 'project_note'   => $request->note,
+
+        //             ]);
+        //         }
+        //     } else {
+        //         if ($request->hasFile('document_attch')) {
+        //             $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+        //             $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+        //             $extension = $request->file('document_attch')->getClientOriginalExtension();
+        //             $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+
+        //             $document_attch = $request->file('document_attch');
+        //             $document_attch->storeAs('public/document', $filenameSimpan);
+
+        //             $projectDetail = ProjectDetail::create([
+
+        //                 'project_id'   => $project_id,
+        //                 'project_name_id'   => $value,
+        //                 'sequence'   => $sequence,
+        //                 'project_status'   => "-",
+        //                 'document_attch'   => "-",
+        //                 'project_note'   => "-",
+
+        //             ]);
+        //         } else {
+        //             $projectDetail = ProjectDetail::create([
+
+        //                 'project_id'   => $project_id,
+        //                 'project_name_id'   => $value,
+        //                 'sequence'   => $sequence,
+        //                 'project_status'   => "-",
+        //                 'document_attch'   => "-",
+        //                 'project_note'   => "-",
+
+        //             ]);
+        //         }
+        //     }
+        // }
+
+        if ($projectDetail) {
+            if ($project) {
+                return new ProjectResource(true, 'Data Project Berhasil Disimpan!', $project);
+            } else {
+                return new ProjectResource(false, 'Data Project gagal Disimpan!', null);
+            }
+        } else {
+            return new ProjectResource(true, 'Data Project Berhasil Disimpan!', $project);
+        }
     }
 
     /**
@@ -124,7 +369,7 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
-        
+
         $project = Project::with('projectDetails')->whereId($id)->first();
 
         if ($project) {
@@ -152,11 +397,15 @@ class ProjectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
+
+
     public function update(Request $request, Project $project)
     {
         $validator = Validator::make($request->all(), [
             'project_name'     => 'required|unique:projects,project_name,' . $project->id,
             'status'     => 'required|integer',
+            'note'     => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -172,7 +421,9 @@ class ProjectController extends Controller
 
             'status' => $request->status,
 
-            'prefix_number' => 'PRJ/'.date("ym"),
+            'note' => $request->note,
+
+            'prefix_number' => 'PRJ/' . date("ym"),
 
         ]);
 
@@ -197,7 +448,7 @@ class ProjectController extends Controller
             // if($current_number > $min_number){
 
             // }
-            
+
 
             return new ProjectResource(true, 'Data project berhasil di hapus', null);
         }

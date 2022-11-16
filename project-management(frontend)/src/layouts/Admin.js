@@ -65,14 +65,14 @@ const LayoutAdmin = ({ children }) => {
         },
       });
 
-      navigate("/login");
+      navigate("/");
     });
   };
 
   return (
     <>
       <div className="d-flex sb-sidenav-toggled" id="wrapper">
-        <div style={{ backgroundColor: '#edf2f4' }} id="sidebar-wrapper">
+        <div style={{ backgroundColor: 'white' }} id="sidebar-wrapper">
           <div className="sidebar-heading bg-light text-center">
             <strong>Project Management</strong>
           </div>
@@ -96,9 +96,9 @@ const LayoutAdmin = ({ children }) => {
                       Project 
                     </NavDropdown.Item>
 
-                    <NavDropdown.Item as={Link} to="/projectDetail">
+                    {/* <NavDropdown.Item as={Link} to="/projectDetail">
                       Project Detail
-                    </NavDropdown.Item>
+                    </NavDropdown.Item> */}
 
                     <NavDropdown.Divider />
 
@@ -108,6 +108,10 @@ const LayoutAdmin = ({ children }) => {
 
                     <NavDropdown.Item as={Link} to="/projectStatus">
                       Project Status
+                    </NavDropdown.Item>
+
+                    <NavDropdown.Item as={Link} to="/user">
+                      Users
                     </NavDropdown.Item>
 
                     <NavDropdown.Divider />

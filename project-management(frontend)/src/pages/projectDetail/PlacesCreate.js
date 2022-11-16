@@ -68,6 +68,7 @@ const PlacesCreate = () => {
 
   const storePlace = async (e) => {
     e.preventDefault();
+    
 
     setLoading(true);
 

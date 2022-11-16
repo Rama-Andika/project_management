@@ -54,9 +54,9 @@ class ProjectDetailController extends Controller
 
             'project_id'   => 'required',
             'project_name_id'   => 'required',
-            'sequence'   => 'required|integer|unique:project_details,sequence',
+            'sequence'   => 'required|integer',
             'status'   => 'required',
-            'document_attch'   => 'mimes:xls,pdf,doc,dot',
+            'document_attch'   => '',
             'note'   => 'required',
 
         ]);
@@ -162,18 +162,20 @@ class ProjectDetailController extends Controller
      */
     public function update(Request $request, ProjectDetail $projectDetail)
     {
+        
+        // $selected_data = ProjectDetail::whereRaw()
         $validator = Validator::make($request->all(), [
-            'project_id'   => 'required',
             'project_name_id'   => 'required',
-            'sequence'   => 'required|integer|unique:project_details,sequence,'.$projectDetail->id,
-            'status'   => 'required',
-            'document_attch'   => 'mimes:xls, pdf, doc, dot',
-            'note'   => 'required',
+            'project_status'   => 'required',
+            'document_attch'   => '',
+            'project_note'   => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
+
+        $last_sequence = ProjectDetail::whereId($projectDetail->id)->first()->sequence;
 
         if($request->hasFile('document_attch')){
             $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
@@ -187,9 +189,9 @@ class ProjectDetailController extends Controller
             $projectDetail->update([
                 'project_id'   => $request->project_id,
                 'project_name_id'   => $request->project_name_id,
-                'sequence'   => $request->sequence,
-                'status'   => $request->status,
-                'document_attch'   => $filenameSimpan,
+                'sequence'   => $last_sequence,
+                'project_status'   => $request->status,
+                'document_attch'   => "$filenameSimpan",
                 'note'   => $request->note,
     
             ]);
@@ -198,8 +200,9 @@ class ProjectDetailController extends Controller
             $projectDetail->update([
                 'project_id'   => $request->project_id,
                 'project_name_id'   => $request->project_name_id,
-                'sequence'   => $request->sequence,
-                'status'   => $request->status,
+                'sequence'   => $last_sequence,
+                'project_status'   => $request->status,
+                'document_attch'   => "-",
                 'note'   => $request->note,
     
             ]);

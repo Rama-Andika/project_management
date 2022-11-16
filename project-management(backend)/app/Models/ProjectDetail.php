@@ -10,7 +10,7 @@ class ProjectDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'project_id', 'project_name_id', 'sequence', 'status', 'document_attch', 'note'
+        'project_id', 'project_name_id', 'sequence', 'project_status', 'document_attch', 'project_note'
     ];
 
     // public function projects(){

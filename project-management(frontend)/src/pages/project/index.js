@@ -20,6 +20,7 @@ import { Button, Card, Col, InputGroup, Row, Table, Form, Modal, Alert, Spinner,
 import Moment from "react-moment";
 import DatePicker from "react-date-picker";
 import { compareAsc, format } from "date-fns";
+import { Link } from "react-router-dom";
 
 function ProjectIndex() {
   //title page
@@ -31,9 +32,9 @@ function ProjectIndex() {
   const [project, setProject] = useState([]);
   const [projectNames, setProjectNames] = useState([]);
   const [projectNumbers, setProjectNumbers] = useState([]);
+  const [status, setStatus] = useState("-1");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-  
 
   const [edit, setEdit] = useState({});
 
@@ -62,22 +63,20 @@ function ProjectIndex() {
 
   //function "fetchData"
 
-  const fetchData = async (pageNumber, sNumber, firstDate, secondDate) => {
+  const fetchData = async (pageNumber, sStatus, sNumber, firstDate, secondDate) => {
     //define variable "searchQuery"
 
     const page = pageNumber ? pageNumber : currentPage;
-    const date1 = format(firstDate ? firstDate : startDate, 'yyyy-MM-dd')
-    const date2 = format(secondDate ? secondDate : endDate, 'yyyy-MM-dd')
-    const tempNumber =  sNumber ? sNumber : number; 
+    const date1 = format(firstDate ? firstDate : startDate, "yyyy-MM-dd");
+    const date2 = format(secondDate ? secondDate : endDate, "yyyy-MM-dd");
+    const tempNumber = sNumber ? sNumber : number;
+    const tempStatus = sStatus ? sStatus : status;
 
-
-  
-    
     setLoading(true);
 
     //fetching data from Rest API
 
-    await Api.get(`/api/searchBy/${tempNumber},${date1},${date2}?page=${page}`, {
+    await Api.get(`/api/searchBy/${tempStatus},${tempNumber},${date1},${date2}?page=${page}`, {
       headers: {
         //header Bearer + Token
 
@@ -122,7 +121,7 @@ function ProjectIndex() {
     }).then((response) => {
       setProjectNumbers(response.data.data.data);
     });
-  }
+  };
 
   const data = Object.values(project);
   const search = (project) => {
@@ -141,7 +140,6 @@ function ProjectIndex() {
     fetchData();
     fetchProjectName();
     fetchProjectNumber();
-   
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -198,11 +196,10 @@ function ProjectIndex() {
   //   setIsChecked(temp);
   // };
   const searchHandler = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    fetchData(1, number, startDate, endDate)
-    
-  }
+    fetchData(1, status, number, startDate, endDate);
+  };
 
   return (
     <React.Fragment>
@@ -220,16 +217,15 @@ function ProjectIndex() {
                     <Form onSubmit={searchHandler}>
                       <Form.Group className="mb-3" controlId="formBasicStatus">
                         <Form.Label>Project Status</Form.Label>
-                        <Form.Select value={""} onChange={""}>
+                        <Form.Select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: "50%" }}>
                           <option value="-1">-- All --</option>
                           <option value="0">In Progress</option>
                           <option value="1">Done</option>
                         </Form.Select>
-                        <Form.Control type="text" style={{ width:'50%' }}/>
                       </Form.Group>
                       <Form.Group className="mb-3" controlId="formBasicNumber">
                         <Form.Label>Number</Form.Label>
-                        <Form.Select value={number} onChange={(e)=>setNumber(e.target.value)} style={{ width:'50%' }}>
+                        <Form.Select value={number} onChange={(e) => setNumber(e.target.value)} style={{ width: "50%" }}>
                           <option value="PRJ">-- All Number --</option>
                           {projectNumbers.map((projectNumber) => (
                             <option value={projectNumber.number}>{projectNumber.number}</option>
@@ -241,24 +237,23 @@ function ProjectIndex() {
                         <Row>
                           <Col xs={12} sm={4} className="form-width">
                             <DatePicker
-                            format="MM-dd-y"
+                              format="MM-dd-y"
                               onChange={(date) => {
-                                setStartDate(date)
+                                setStartDate(date);
                               }}
                               value={startDate}
-                             
                             />
                           </Col>
 
-                          <Col xs={12} sm={4}  className="form-width">
+                          <Col xs={12} sm={4} className="form-width">
                             s/d
                           </Col>
 
-                          <Col xs={12} sm={4}  className="form-width">
+                          <Col xs={12} sm={4} className="form-width">
                             <DatePicker
                               format="MM-dd-y"
                               onChange={(date) => {
-                                setEndDate(date)
+                                setEndDate(date);
                               }}
                               value={endDate}
                             />
@@ -274,7 +269,7 @@ function ProjectIndex() {
                     </Form>
                   </Col>
                 </Row>
-                <Table responsive bordered striped hover>
+                <Table responsive bordered hover>
                   <thead>
                     <tr>
                       <th>No.</th>
@@ -286,7 +281,7 @@ function ProjectIndex() {
                       <th className="text-nowrap">Project Name</th>
 
                       {projectNames.map((projectName) => (
-                        <th className="text-nowrap">{titleCase(projectName.name)}</th>
+                        <th className="text-nowrap">{projectName.name}</th>
                       ))}
                     </tr>
                   </thead>
@@ -294,7 +289,7 @@ function ProjectIndex() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-4">
+                        <td colSpan={4+projectNames.length} className="text-center py-4">
                           <Spinner animation="border" size="lg" role="status" />
                           <span className="visually-hidden">...loading</span>
                         </td>
@@ -303,7 +298,7 @@ function ProjectIndex() {
                       <>
                         {project === "" ? (
                           <tr>
-                            <td colSpan={4} className="text-center py-4">
+                            <td colSpan={4+projectNames.length} className="text-center py-4">
                               Data Not Found
                             </td>
                           </tr>
@@ -320,11 +315,9 @@ function ProjectIndex() {
                               <td className="text-nowrap">{projectDetail.project_name}</td>
 
                               {projectNames.map((projectName) => 
-                                projectDetail.project_details.map((projectDetail, i) => (
-                                  <td>{i}</td>
-                                )
-                   
-                              ))}
+                                projectDetail.project_details.map((projectDetail, i) => ( 
+                                  projectName.id === projectDetail.project_name_id ? <td className="text-nowrap">{projectDetail.project_status}</td> : ""
+                              )))}
                             </tr>
                           ))
                         )}
@@ -332,7 +325,12 @@ function ProjectIndex() {
                     )}
                   </tbody>
                 </Table>
-                <Row>
+                <Row className="mt-5">
+                  <Col>
+                    <Button as={Link} to="/projectCreate" className="btn-add">
+                      Add New
+                    </Button>
+                  </Col>
                   <Col>
                     <PaginationComponent currentPage={currentPage} perPage={perPage} total={total} onChange={(pageNumber) => fetchData(pageNumber)} position="end" />
                   </Col>

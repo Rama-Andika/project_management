@@ -22,7 +22,7 @@ Api.interceptors.response.use(function (response) {
     if (401 === error.response.status) {
         Cookies.remove('token')
 
-        window.location='/login'
+        window.location='/'
     } else {
         // reject promise error
         return Promise.reject(error)

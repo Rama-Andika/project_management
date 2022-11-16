@@ -77,7 +77,7 @@ body.modal-open footer {
 
 #sidebar-wrapper {
   min-height: 100vh;
-  margin-left: -16rem;
+  margin-left: -15rem;
   transition: margin 0.25s ease-out;
 }
 
@@ -115,7 +115,7 @@ body.sb-sidenav-toggled #wrapper #sidebar-wrapper {
   }
 
   body.sb-sidenav-toggled #wrapper #sidebar-wrapper {
-    margin-left: -16rem;
+    margin-left: -15rem;
   }
 }
 
@@ -573,4 +573,17 @@ footer {
   .form-width{
     width: 100%;
   }
+}
+
+.btn-add{
+  background-color: #569cb8;
+}
+
+.btn-add:hover{
+  background-color: #264653 !important;
+}
+
+.bOQEtf{
+  width: 15rem !important;
+  min-width: 15rem !important;
 }

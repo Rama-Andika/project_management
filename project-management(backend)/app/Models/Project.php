@@ -11,7 +11,7 @@ class Project extends Model
     use HasFactory;
 
     protected $fillable=[
-       'number', 'project_name', 'status', 'prefix_number'
+       'number', 'project_name', 'status', 'note','prefix_number'
     ];
 
     public function projectDetails(){

@@ -18,6 +18,7 @@ class CreateProjectsTable extends Migration
             $table->UUID('number');           
             $table->string('project_name');           
             $table->integer('status');           
+            $table->text('note');           
             $table->string('prefix_number');           
             $table->timestamps();
         });

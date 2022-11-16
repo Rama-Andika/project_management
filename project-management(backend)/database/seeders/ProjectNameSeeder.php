@@ -15,7 +15,7 @@ class ProjectNameSeeder extends Seeder
     public function run()
     {
         DB::table('project_names')->insert([
-            //['name'=>'Quotation', 'sequence' => 1, 'required_file'=>1],
+            ['name'=>'Quotation', 'sequence' => 1, 'required_file'=>1],
             ['name'=>'PO', 'sequence' => 2, 'required_file'=>1],
             ['name'=>'PERSIAPAN BARANG', 'sequence' => 3, 'required_file'=>1],
             ['name'=>'PEMBAYARAN / DP', 'sequence' => 4, 'required_file'=>1],

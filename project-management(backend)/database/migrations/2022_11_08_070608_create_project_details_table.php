@@ -18,9 +18,9 @@ class CreateProjectDetailsTable extends Migration
             $table->unsignedBigInteger("project_id");
             $table->unsignedBigInteger("project_name_id");
             $table->integer("sequence");
-            $table->string("status");
+            $table->string("project_status");
             $table->string("document_attch");
-            $table->text("note");
+            $table->text("project_note");
             $table->timestamps();
 
 

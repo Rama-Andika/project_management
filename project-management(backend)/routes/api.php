@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ProjectDetailController;
 use App\Http\Controllers\Api\ProjectNameController;
 use App\Http\Controllers\Api\ProjectStatusController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,11 +37,16 @@ Route::group(['middleware' => 'auth:api'], function () {
      Route::apiResource('projectName', ProjectNameController::class, ['except' => ['create', 'edit']]);
     //  Route::get('projectNameByName/{name}', [ProjectNameController::class, 'showName']);
      Route::apiResource('project', ProjectController::class, ['except' => ['create', 'edit']]);
+     Route::post('editProjectDetail/{id}', [ProjectController::class, 'store']);
 
      Route::apiResource('projectStatus', ProjectStatusController::class, ['except' => ['create', 'edit']]);
 
      Route::apiResource('projectDetail', ProjectDetailController::class, ['except' => ['create', 'edit']]);
 
-     Route::get('searchBy/{number?},{startDate},{endDate}', [ProjectController::class, 'searchBy']);
+     Route::apiResource('users', UserController::class, ['except' => ['create', 'edit']]);
+
+     Route::get('searchBy/{status},{number},{startDate},{endDate}', [ProjectController::class, 'searchBy']);
+     Route::get('searchByName/{name}', [ProjectController::class, 'searchByName']);
+
 
 });

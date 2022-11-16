@@ -62,16 +62,17 @@ function ProjectNameIndex() {
 
   //function "fetchData"
 
-  const fetchData = async (pageNumber) => {
+  const fetchData = async (pageNumber, searchData) => {
     //define variable "searchQuery"
 
     const page = pageNumber ? pageNumber : currentPage;
+    const searchQuery = searchData ? searchData : q;
 
     setLoading(true);
 
     //fetching data from Rest API
 
-    await Api.get(`/api/projectName?page=${page}`, {
+    await Api.get(`/api/projectName?page=${page}&q=${searchQuery}`, {
       headers: {
         //header Bearer + Token
 
@@ -113,7 +114,7 @@ function ProjectNameIndex() {
     //call function "fetchData"
 
     fetchData();
-    console.log(requiredFile);
+  
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -140,7 +141,7 @@ function ProjectNameIndex() {
           <div className="custom-ui">
             <Card style={{ background: "#00b4d8" }}>
               <Card.Body className="text-black">
-                <Card.Title >Are you sure?</Card.Title>
+                <Card.Title>Are you sure?</Card.Title>
                 <Card.Text>You want to delete this file?</Card.Text>
                 <Row>
                   <Col>
@@ -299,6 +300,11 @@ function ProjectNameIndex() {
 
   //   setIsChecked(temp);
   // };
+  const searchHandlder = (e) => {
+    e.preventDefault();
+
+    fetchData(1, q);
+  };
 
   return (
     <React.Fragment>
@@ -313,9 +319,14 @@ function ProjectNameIndex() {
               <Card.Body>
                 <Row>
                   <Col xs={10}>
-                    <InputGroup className="mb-3">
-                      <Form.Control type="search" name="search-form" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for..." />
-                    </InputGroup>
+                    <form onSubmit={searchHandlder} className="form-group">
+                      <div className="input-group mb-3">
+                        <input type="text" className="form-control" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search by name" />
+                        <button type="submit" className="btn btn-md btn-success">
+                          <i className="fa fa-search"></i> SEARCH
+                        </button>
+                      </div>
+                    </form>
                   </Col>
                   <Col xs={2}>
                     <Button className="rounded-circle float-end" size="md" style={{ background: "#06d6a0" }} onClick={handleShowModal}>
@@ -323,7 +334,7 @@ function ProjectNameIndex() {
                     </Button>
                   </Col>
                 </Row>
-                <Table responsive bordered striped hover>
+                <Table responsive bordered hover>
                   <thead>
                     <tr>
                       <th>No.</th>
@@ -346,46 +357,42 @@ function ProjectNameIndex() {
                           <span className="visually-hidden">...loading</span>
                         </td>
                       </tr>
+                    ) : !projectNames.length > 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-4">
+                          Data Not Found
+                        </td>
+                      </tr>
                     ) : (
-                      <>
-                        {search(data) == "" ? (
-                          <tr>
-                            <td colSpan={4} className="text-center py-4">
-                              Data Not Found
-                            </td>
-                          </tr>
-                        ) : (
-                          search(data).map((projectName, index) => (
-                            <tr key={projectName.id}>
-                              <td>{++index + (currentPage - 1) * perPage}</td>
-                              <td>{projectName.name}</td>
-                              <td>{projectName.sequence}</td>
-                              <td>{projectName.required_file === "0" ? 'No' : 'Yes'}</td>
-                              <td>
-                                <Button
-                                  className="me-3 mb-3"
-                                  variant="warning"
-                                  onClick={() => {
-                                    editHandler(projectName);
-                                  }}
-                                >
-                                  <i className="fa-solid fa-pen-to-square"></i>
-                                </Button>
+                      projectNames.map((projectName, index) => (
+                        <tr key={projectName.id}>
+                          <td>{++index + (currentPage - 1) * perPage}</td>
+                          <td>{projectName.name}</td>
+                          <td>{projectName.sequence}</td>
+                          <td>{projectName.required_file === "0" ? "No" : "Yes"}</td>
+                          <td>
+                            <Button
+                              className="me-3 mb-3"
+                              variant="warning"
+                              onClick={() => {
+                                editHandler(projectName);
+                              }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </Button>
 
-                                <Button
-                                  className=" mb-3"
-                                  variant="danger"
-                                  onClick={() => {
-                                    deleteCategory(projectName.id);
-                                  }}
-                                >
-                                  <i className="fa-solid fa-trash"></i>
-                                </Button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </>
+                            <Button
+                              className=" mb-3"
+                              variant="danger"
+                              onClick={() => {
+                                deleteCategory(projectName.id);
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </Table>
@@ -425,8 +432,8 @@ function ProjectNameIndex() {
                 <Form.Label>Required File</Form.Label>
                 <br />
 
-                <Form.Check name="requiredFile" inline type="radio" label="no" value="0" onChange={(e) => setRequiredFile(e.target.value)} checked={requiredFile==="0" && true}/>
-                <Form.Check name="requiredFile" inline type="radio" label="yes" value="1" onChange={(e) => setRequiredFile(e.target.value)} checked={requiredFile==="1" && true}/>
+                <Form.Check name="requiredFile" inline type="radio" label="no" value="0" onChange={(e) => setRequiredFile(e.target.value)} checked={requiredFile === "0" && true} />
+                <Form.Check name="requiredFile" inline type="radio" label="yes" value="1" onChange={(e) => setRequiredFile(e.target.value)} checked={requiredFile === "1" && true} />
               </Form.Group>
               {validation.required_file && (
                 <Alert variant="danger" className="mb-3">
