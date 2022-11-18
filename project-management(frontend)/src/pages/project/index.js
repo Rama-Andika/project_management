@@ -112,12 +112,12 @@ function ProjectIndex() {
   };
 
   const fetchProjectNumber = async () => {
-    await Api.get("/api/project", {
+    await Api.get("/api/numberList", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNumbers(response.data.data.data);
+      setProjectNumbers(response.data.data);
     });
   };
 

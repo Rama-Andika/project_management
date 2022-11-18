@@ -263,6 +263,27 @@ function ProjectCreate() {
     // }
   };
 
+  const downloadFile = async (projectName) => {
+    const formData = new FormData();
+    formData.append("project_id", id);
+    formData.append("project_name_id", projectName);
+    formData.append("document_attch", file);
+
+    await Api.get("api/downloadFile", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: "blob",
+    }).then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "file.pdf"); //or any other extension
+      document.body.appendChild(link);
+      link.click();
+    });
+  };
+
   useEffect(() => {
     //call function "fetchData"
 
@@ -355,7 +376,9 @@ function ProjectCreate() {
                               <Form.Select value={arrProjectStatus[i]} onChange={(e) => handleChangeProjectStatus(e, i)}>
                                 <option value="">-- Select Status --</option>
                                 {projectName.project_statuses.map((projectStatus) => (
-                                  <option key={projectStatus.id} value={projectStatus.id}>{projectStatus.status}</option>
+                                  <option key={projectStatus.id} value={projectStatus.id}>
+                                    {projectStatus.status}
+                                  </option>
                                 ))}
                               </Form.Select>
                             </Form.Group>
@@ -363,9 +386,18 @@ function ProjectCreate() {
 
                             {projectName.required_file === "1" && (
                               <>
-                                <Form.Group className="mb-3">
+                                <Form.Group className="mb-4">
                                   <Form.Label>File</Form.Label>
                                   <Form.Control type="file" onChange={handleChangeFile} />
+                                  <Button
+                                    className="mt-3"
+                                    onClick={() => {
+                                      downloadFile(projectName.id);
+                                    }}
+                                    disabled={file !== "-" ? false : true}
+                                  >
+                                    Download File
+                                  </Button>
                                 </Form.Group>
                                 {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                               </>
@@ -407,7 +439,9 @@ function ProjectCreate() {
                                     <Form.Select value={arrProjectStatus[i]} onChange={(e) => handleChangeProjectStatus(e, i)}>
                                       <option value="">-- Select Status --</option>
                                       {projectName.project_statuses.map((projectStatus) => (
-                                        <option key={projectStatus.id} value={projectStatus.id}>{projectStatus.status}</option>
+                                        <option key={projectStatus.id} value={projectStatus.id}>
+                                          {projectStatus.status}
+                                        </option>
                                       ))}
                                     </Form.Select>
                                   </Form.Group>

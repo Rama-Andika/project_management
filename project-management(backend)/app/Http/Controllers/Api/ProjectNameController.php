@@ -29,6 +29,17 @@ class ProjectNameController extends Controller
         return new ProjectNameResource(true, 'List Data Project Name', $projectName);
     }
 
+    public function projectList()
+    {
+
+        $projectName = ProjectName::with('projectStatuses.projectDetail.projectStatus')->when(request()->q, function ($projectName) {
+            $projectName = $projectName->where('name', 'like', '%' . request()->q . '%');
+        })->orderBy('sequence')->get();
+
+        //return with Api Resource
+        return new ProjectNameResource(true, 'List Data Project Name', $projectName);
+    }
+
     /**
      * Show the form for creating a new resource.
      *

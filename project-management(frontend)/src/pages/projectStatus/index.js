@@ -101,12 +101,12 @@ function ProjectStatusIndex() {
   };
 
   const fetchProjectName = async () => {
-    await Api.get("/api/projectName", {
+    await Api.get("/api/projectList", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNames(response.data.data.data);
+      setProjectNames(response.data.data);
     });
   };
 

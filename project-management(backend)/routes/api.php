@@ -35,9 +35,13 @@ Route::group(['middleware' => 'auth:api'], function () {
 
      //category resource
      Route::apiResource('projectName', ProjectNameController::class, ['except' => ['create', 'edit']]);
+     Route::get('projectList', [ProjectNameController::class, 'projectList']);
+     Route::get('numberList', [ProjectController::class, 'numberList']);
+
     //  Route::get('projectNameByName/{name}', [ProjectNameController::class, 'showName']);
      Route::apiResource('project', ProjectController::class, ['except' => ['create', 'edit']]);
      Route::post('editProjectDetail/{id}', [ProjectController::class, 'store']);
+     Route::get('downloadFile', [ProjectController::class, 'downloadFile']);
 
      Route::apiResource('projectStatus', ProjectStatusController::class, ['except' => ['create', 'edit']]);
      Route::get('searchSequence/{id}', [ProjectStatusController::class, 'searchMaxSequence']);
