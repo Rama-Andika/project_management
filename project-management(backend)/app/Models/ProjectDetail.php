@@ -10,7 +10,7 @@ class ProjectDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'project_id', 'project_name_id', 'sequence', 'project_status', 'document_attch', 'project_note'
+        'project_id', 'project_name_id', 'sequence', 'project_status_id', 'document_attch', 'project_note'
     ];
 
     // public function projects(){
@@ -26,6 +26,10 @@ class ProjectDetail extends Model
     }
     public function projectName(){
         return $this->belongsTo(ProjectName::class,'project_name_id','id');
+    }
+
+    public function projectStatus(){
+        return $this->belongsTo(ProjectStatus::class,'project_status_id','id');
     }
 
     public function getDocumentAttchAttribute($document_attch){

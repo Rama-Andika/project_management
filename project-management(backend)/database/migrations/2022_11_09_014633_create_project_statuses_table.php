@@ -19,6 +19,9 @@ class CreateProjectStatusesTable extends Migration
             $table->string("status");
             $table->integer("sequence");
             $table->timestamps();
+
+            //relationship project_names
+            $table->foreign('project_name_id')->references('id')->on('project_names');
         });
     }
 

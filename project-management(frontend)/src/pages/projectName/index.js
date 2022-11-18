@@ -16,7 +16,7 @@ import PaginationComponent from "../../components/Pagination";
 import toast from "react-hot-toast";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Button, Card, Col, InputGroup, Row, Table, Form, Modal, Alert, Spinner } from "react-bootstrap";
+import { Button, Card, Col, Row, Table, Form, Modal, Alert, Spinner } from "react-bootstrap";
 
 function ProjectNameIndex() {
   //title page
@@ -54,7 +54,6 @@ function ProjectNameIndex() {
   const [blur, setBlur] = useState(0);
 
   const [q, setQ] = useState("");
-  const [searchParam] = useState(["name"]);
 
   //token
 
@@ -99,22 +98,12 @@ function ProjectNameIndex() {
     });
   };
 
-  const data = Object.values(projectNames);
-  const search = (projectNames) => {
-    return projectNames.filter((projecName) => {
-      return searchParam.some((newProjectName) => {
-        return projecName[newProjectName]?.toString().toLowerCase().indexOf(q.toLowerCase()) > -1;
-      });
-    });
-  };
-
   //hook
 
   useEffect(() => {
     //call function "fetchData"
 
     fetchData();
-  
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -134,7 +123,7 @@ function ProjectNameIndex() {
     setBlur(0);
   };
 
-  const deleteCategory = (id) => {
+  const deleteProjectName = (id) => {
     confirmAlert({
       customUI: ({ onClose }) => {
         return (
@@ -158,18 +147,30 @@ function ProjectNameIndex() {
                           headers: {
                             Authorization: `Bearer ${token}`,
                           },
-                        }).then((onClose) => {
-                          toast.success("Delete data succesfully", {
-                            duration: 4000,
-                            position: "top-right",
-                            style: {
-                              borderRadius: "10px",
-                              background: "#333",
-                              color: "#fff",
-                            },
+                        })
+                          .then((onClose) => {
+                            toast.success("Delete data succesfully", {
+                              duration: 4000,
+                              position: "top-right",
+                              style: {
+                                borderRadius: "10px",
+                                background: "#333",
+                                color: "#fff",
+                              },
+                            });
+                            fetchData();
+                          })
+                          .catch((onClose) => {
+                            toast.error("Delete data failed", {
+                              duration: 4000,
+                              position: "top-right",
+                              style: {
+                                borderRadius: "10px",
+                                background: "#333",
+                                color: "#fff",
+                              },
+                            });
                           });
-                          fetchData();
-                        });
                         onClose();
                       }}
                     >
@@ -185,7 +186,7 @@ function ProjectNameIndex() {
     });
   };
 
-  const storeCategory = async (e) => {
+  const storeProjectName = async (e) => {
     e.preventDefault();
 
     setLoading(true);
@@ -378,17 +379,17 @@ function ProjectNameIndex() {
                                 editHandler(projectName);
                               }}
                             >
-                              <i className="fa-solid fa-pen-to-square"></i>
+                              <i className="fa-solid fa-pen-to-square fa-2xs"></i>
                             </Button>
 
                             <Button
                               className=" mb-3"
                               variant="danger"
                               onClick={() => {
-                                deleteCategory(projectName.id);
+                                deleteProjectName(projectName.id);
                               }}
                             >
-                              <i className="fa-solid fa-trash"></i>
+                              <i className="fa-solid fa-trash fa-2xs"></i>
                             </Button>
                           </td>
                         </tr>
@@ -408,10 +409,10 @@ function ProjectNameIndex() {
 
         <Modal show={showModal} onHide={handleCloseModal} backdrop="static">
           <Modal.Header closeButton>
-            <Modal.Title>{edit.id ? "Edit Category" : "Create Category"}</Modal.Title>
+            <Modal.Title>{edit.id ? "Edit Project" : "Create Project"}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={storeCategory}>
+            <Form onSubmit={storeProjectName}>
               <Form.Group className="mb-3">
                 <Form.Label>Name</Form.Label>
                 <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} />

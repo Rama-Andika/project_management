@@ -21,9 +21,9 @@ class ProjectNameController extends Controller
     public function index()
     {
 
-        $projectName = ProjectName::with('projectStatuses')->when(request()->q, function ($projectName) {
+        $projectName = ProjectName::with('projectStatuses.projectDetail.projectStatus')->when(request()->q, function ($projectName) {
             $projectName = $projectName->where('name', 'like', '%' . request()->q . '%');
-        })->orderBy('sequence')->paginate(10);
+        })->orderBy('sequence')->paginate(5);
 
         //return with Api Resource
         return new ProjectNameResource(true, 'List Data Project Name', $projectName);
@@ -173,6 +173,9 @@ class ProjectNameController extends Controller
     {
         if ($projectName->delete()) {
             return new ProjectNameResource(true, 'Data project Name berhasil di hapus', null);
+        }
+        else{
+            return response()->json(['errors' => "Cannot delete project"], 422);
         }
 
         return new ProjectNameResource(false, 'Data project Name gagal di hapus', null);

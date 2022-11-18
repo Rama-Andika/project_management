@@ -21,7 +21,7 @@ class ProjectStatusController extends Controller
     {
         $projectStatus = ProjectStatus::with('projectName')->when(request()->q, function ($projectStatus) {
             $projectStatus = $projectStatus->where('status', 'like', '%' . request()->q . '%');
-        })->orderBy('project_name_id')->paginate(10);
+        })->orderBy('project_name_id')->orderBy('sequence')->paginate(5);
 
         // ProjectStatus::where('project_name_id','=',"7")->pluck('id');
         // $arrStatus = Array($projectStatus);
@@ -36,6 +36,13 @@ class ProjectStatusController extends Controller
 
         //return with Api Resource
         return new ProjectStatusResource(true, 'List Data Project Status', $projectStatus);
+    }
+
+    public function searchMaxSequence ($id){
+        $sequence = ProjectStatus::whereId($id)->value('sequence');
+
+        //return with Api Resource
+        return new ProjectStatusResource(true, 'Sequence', $sequence);
     }
 
     /**

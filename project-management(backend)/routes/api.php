@@ -40,6 +40,7 @@ Route::group(['middleware' => 'auth:api'], function () {
      Route::post('editProjectDetail/{id}', [ProjectController::class, 'store']);
 
      Route::apiResource('projectStatus', ProjectStatusController::class, ['except' => ['create', 'edit']]);
+     Route::get('searchSequence/{id}', [ProjectStatusController::class, 'searchMaxSequence']);
 
      Route::apiResource('projectDetail', ProjectDetailController::class, ['except' => ['create', 'edit']]);
 

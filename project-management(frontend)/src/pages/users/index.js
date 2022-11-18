@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner, Table } from "react-bootstrap";
+import { Alert, Button, Card, Col, Form, Modal, Row, Spinner, Table } from "react-bootstrap";
 import LayoutAdmin from "../../layouts/Admin";
 import Api from "../../api";
 import Cookies from "js-cookie";
@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import PaginationComponent from "../../components/Pagination";
 
 const UsersIndex = () => {
-  document.title = "Users - Administrator Rama Wisata";
+  document.title = "Users";
   const [users, setUsers] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,15 +47,6 @@ const UsersIndex = () => {
     });
   };
 
-  const data = Object.values(users);
-  const search = (users) => {
-    return users.filter((user) => {
-      return searchParam.some((newUser) => {
-        return user[newUser]?.toString().toLowerCase().indexOf(q.toLowerCase()) > -1;
-      });
-    });
-  };
-
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,7 +80,7 @@ const UsersIndex = () => {
 
     if (edit.id) {
       formData.append("name", name);
-      formData.append("username", name);
+      formData.append("username", username);
       formData.append("email", email);
       formData.append("password", password);
       formData.append("password_confirmation", passwordConfirmation);
@@ -101,7 +92,6 @@ const UsersIndex = () => {
         },
       })
         .then(() => {
-
           toast.success("Data saved succefully", {
             duration: 4000,
             position: "top-right",
@@ -159,28 +149,6 @@ const UsersIndex = () => {
     setEmail(user.email);
     setPassword(user.password);
     handleShowModal();
-  };
-
-  const restore = async (id) => {
-    await Api.post(`/api/admin/users/restore/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(() => {
-        toast.success("Data restore succefully", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        });
-
-        fetchData();
-      })
-      .catch();
   };
 
   const deleteHandler = (id) => {
@@ -319,44 +287,25 @@ const UsersIndex = () => {
                         <td>{user.username}</td>
                         <td>{user.email}</td>
                         <td>
-                          {!user.deleted_at === "" ? (
-                            ""
-                          ) : (
-                            <Button
-                              className="me-3 mb-3"
-                              variant="warning"
-                              onClick={() => {
-                                editHandler(user);
-                              }}
-                            >
-                              <i className="fa-solid fa-pen-to-square"></i>
-                            </Button>
-                          )}
+                          <Button
+                            className="me-3 mb-3"
+                            variant="warning"
+                            onClick={() => {
+                              editHandler(user);
+                            }}
+                          >
+                            <i className="fa-solid fa-pen-to-square fa-2xs"></i>
+                          </Button>
 
-                          {
-                            // eslint-disable-next-line eqeqeq
-                            !user.deleted_at == "" ? (
-                              <Button
-                                className=" mb-3"
-                                variant="success"
-                                onClick={() => {
-                                  restore(user.id);
-                                }}
-                              >
-                                <i className="fa-solid fa-trash-arrow-up"></i>
-                              </Button>
-                            ) : (
-                              <Button
-                                className=" mb-3"
-                                variant="danger"
-                                onClick={() => {
-                                  deleteHandler(user.id);
-                                }}
-                              >
-                                <i className="fa-solid fa-trash"></i>
-                              </Button>
-                            )
-                          }
+                          <Button
+                            className=" mb-3"
+                            variant="danger"
+                            onClick={() => {
+                              deleteHandler(user.id);
+                            }}
+                          >
+                            <i className="fa-solid fa-trash fa-2xs"></i>
+                          </Button>
                         </td>
                       </tr>
                     ))

@@ -16,27 +16,28 @@ import PaginationComponent from "../../components/Pagination";
 import toast from "react-hot-toast";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Button, Card, Col, InputGroup, Row, Table, Form, Modal, Alert, Spinner, Dropdown } from "react-bootstrap";
+import { Button, Card, Col, Row, Table, Form, Modal, Spinner } from "react-bootstrap";
 import Moment from "react-moment";
 import DatePicker from "react-date-picker";
-import { compareAsc, format } from "date-fns";
+import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
 function ProjectIndex() {
   //title page
 
-  document.title = "Project Status";
+  document.title = "Project";
 
   //state posts
 
-  const [project, setProject] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [projectNames, setProjectNames] = useState([]);
   const [projectNumbers, setProjectNumbers] = useState([]);
   const [status, setStatus] = useState("-1");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
-  const [edit, setEdit] = useState({});
+  const [showModal, setShowModal] = useState(false);
+  const [blur, setBlur] = useState(0);
 
   //state currentPage
 
@@ -51,9 +52,6 @@ function ProjectIndex() {
   const [total, setTotal] = useState(0);
 
   const [loading, setLoading] = useState(false);
-
-  const [q, setQ] = useState("");
-  const [searchParam] = useState(["status"]);
 
   //token
 
@@ -85,7 +83,7 @@ function ProjectIndex() {
     }).then((response) => {
       //set data response to state "categories"
 
-      setProject(response.data.data.data);
+      setProjects(response.data.data.data);
 
       //set currentPage
 
@@ -123,15 +121,6 @@ function ProjectIndex() {
     });
   };
 
-  const data = Object.values(project);
-  const search = (project) => {
-    return project.filter((projectDetail) => {
-      return searchParam.some((newProject) => {
-        return projectDetail[newProject]?.toString().toLowerCase().indexOf(q.toLowerCase()) > -1;
-      });
-    });
-  };
-
   //hook
 
   useEffect(() => {
@@ -143,17 +132,6 @@ function ProjectIndex() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function titleCase(str) {
-    var splitStr = str.toLowerCase().split(" ");
-    for (var i = 0; i < splitStr.length; i++) {
-      // You do not need to check if i is larger than splitStr length, as your for does that for you
-      // Assign it back to the array
-      splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
-    }
-    // Directly return the joined string
-    return splitStr.join(" ");
-  }
 
   // const handleChangeCheckedAll = (e) => {
   //   setIsCheckedAll(isCheckedAll ? false : true);
@@ -201,10 +179,66 @@ function ProjectIndex() {
     fetchData(1, status, number, startDate, endDate);
   };
 
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setBlur(0);
+  };
+
+  const deleteProject = (projectId) => {
+    confirmAlert({
+      customUI: ({ onClose }) => {
+        return (
+          <div className="custom-ui">
+            <Card style={{ background: "#00b4d8" }}>
+              <Card.Body className="text-black">
+                <Card.Title>Are you sure?</Card.Title>
+                <Card.Text>You want to delete this project</Card.Text>
+                <Row>
+                  <Col>
+                    <Button onClick={onClose} style={{ background: "#06d6a0" }}>
+                      No
+                    </Button>
+                  </Col>
+                  <Col>
+                    <Button
+                      className="text-nowrap"
+                      variant="danger"
+                      onClick={async () => {
+                        await Api.delete(`/api/project/${projectId}`, {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        }).then((onClose) => {
+                          toast.success("Delete data succesfully", {
+                            duration: 4000,
+                            position: "top-right",
+                            style: {
+                              borderRadius: "10px",
+                              background: "#333",
+                              color: "#fff",
+                            },
+                          });
+                          fetchData();
+                        });
+                        onClose();
+                      }}
+                    >
+                      Yes, Delete it!
+                    </Button>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </div>
+        );
+      },
+    });
+  };
+
   return (
     <React.Fragment>
       <LayoutAdmin>
-        <Row className=" mt-4">
+        <Row className=" mt-4" style={{ filter: `blur(${blur}px)` }}>
           <Col xs={12}>
             <Card className="border-0 rounded shadow-sm">
               <Card.Header>
@@ -228,7 +262,7 @@ function ProjectIndex() {
                         <Form.Select value={number} onChange={(e) => setNumber(e.target.value)} style={{ width: "50%" }}>
                           <option value="PRJ">-- All Number --</option>
                           {projectNumbers.map((projectNumber) => (
-                            <option value={projectNumber.number}>{projectNumber.number}</option>
+                            <option key={projectNumber.id} value={projectNumber.number}>{projectNumber.number}</option>
                           ))}
                         </Form.Select>
                       </Form.Group>
@@ -272,7 +306,9 @@ function ProjectIndex() {
                 <Table responsive bordered hover>
                   <thead>
                     <tr>
-                      <th>No.</th>
+                      <th>Action</th>
+                      
+                      <th>No</th>
 
                       <th>Number</th>
 
@@ -281,7 +317,7 @@ function ProjectIndex() {
                       <th className="text-nowrap">Project Name</th>
 
                       {projectNames.map((projectName) => (
-                        <th className="text-nowrap">{projectName.name}</th>
+                        <th key={projectName.id} className="text-nowrap">{projectName.name}</th>
                       ))}
                     </tr>
                   </thead>
@@ -289,35 +325,47 @@ function ProjectIndex() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={4+projectNames.length} className="text-center py-4">
+                        <td colSpan={5 + projectNames.length} className="text-center py-4">
                           <Spinner animation="border" size="lg" role="status" />
                           <span className="visually-hidden">...loading</span>
                         </td>
                       </tr>
                     ) : (
                       <>
-                        {project === "" ? (
+                        {projects === "" ? (
                           <tr>
-                            <td colSpan={4+projectNames.length} className="text-center py-4">
+                            <td colSpan={5 + projectNames.length} className="text-center py-4">
                               Data Not Found
                             </td>
                           </tr>
                         ) : (
-                          project.map((projectDetail, index) => (
-                            <tr key={projectDetail.id}>
+                          projects.map((project, index) => (
+                            <tr key={project.id}>
+                              <td className="text-center">
+                                <Button size="sm" className=" mb-3" variant="danger" onClick={() => deleteProject(project.id)}>
+                                  <i className="fa-solid fa-trash fa-2xs"></i>
+                                </Button>
+                              </td>
                               <td>{++index + (currentPage - 1) * perPage}</td>
-
-                              <td className="text-nowrap">{projectDetail.number}</td>
+                              {/* <Link to={`/projectEdit/${project.id}`}>
+                                <td className="text-nowrap">{project.number}</td>
+                              </Link> */}
                               <td className="text-nowrap">
-                                <Moment format="DD MMMM, YYYY">{projectDetail.created_at}</Moment>
+                                <Link to={`/projectEdit/${project.id}`}>{project.number}</Link>
+                              </td>
+                              {/* <Link onClick={() => actionsHandler(project)}>
+                                <td className="text-nowrap">{project.number}</td>
+                              </Link> */}
+
+                              <td className="text-nowrap">
+                                <Moment format="DD MMMM, YYYY">{project.created_at}</Moment>
                               </td>
 
-                              <td className="text-nowrap">{projectDetail.project_name}</td>
+                              <td className="text-nowrap">{project.project_name}</td>
 
-                              {projectNames.map((projectName) => 
-                                projectDetail.project_details.map((projectDetail, i) => ( 
-                                  projectName.id === projectDetail.project_name_id ? <td className="text-nowrap">{projectDetail.project_status}</td> : ""
-                              )))}
+                              {projectNames.map((projectName) =>
+                                project.project_details.map((projectDetail, i) => (projectName.id === projectDetail.project_name_id ? <td className="text-nowrap">{projectDetail.project_status.status}</td> : ""))
+                              )}
                             </tr>
                           ))
                         )}
@@ -339,6 +387,26 @@ function ProjectIndex() {
             </Card>
           </Col>
         </Row>
+        <Modal show={showModal} onHide={handleCloseModal} backdrop="static">
+          <Modal.Header closeButton>
+            <Modal.Title>Actions</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row className="text-center">
+              <Col>
+                <Button size="lg" className="me-3 mb-3" variant="warning" onClick={""}>
+                  Edit <i className="fa-solid fa-pen-to-square fa-2xs"></i>
+                </Button>
+              </Col>
+              <Col>
+                <Button size="lg" className=" mb-3" variant="danger" onClick={""}>
+                  Delete <i className="fa-solid fa-trash fa-2xs"></i>
+                </Button>
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer></Modal.Footer>
+        </Modal>
       </LayoutAdmin>
     </React.Fragment>
   );

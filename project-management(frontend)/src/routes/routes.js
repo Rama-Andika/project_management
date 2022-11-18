@@ -7,6 +7,7 @@ import ProjectIndex from "../pages/project";
 import ProjectCreate from "../pages/project/ProjectCreate";
 import UserIndex from "../pages/users";
 import UsersIndex from "../pages/users";
+import ProjectEdit from "../pages/project/ProjectEdit";
 
 // ===============================================================
 // ADMIN
@@ -26,6 +27,7 @@ const Router = ({ children, ...rest }) => {
         <Route element={<PrivateRoute />}>
             <Route path="/project" element={<ProjectIndex />} />
             <Route path="/projectCreate" element={<ProjectCreate />} />
+            <Route path="/projectEdit/:id" element={<ProjectEdit />} />
             <Route path="/user" element={<UsersIndex />} />
             <Route path="/projectName" element={<ProjectNameIndex />} />
             <Route path="/projectStatus" element={<ProjectStatusIndex />} />

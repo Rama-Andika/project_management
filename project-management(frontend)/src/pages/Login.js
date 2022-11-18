@@ -58,7 +58,7 @@ const Login = () => {
       <Container>
         <Row className="justify-content-center">
           <Col md={4} className="mt-150">
-            <div className="text-center mb-4">
+            <div className="text-center text-white mb-4">
               <h4>
                 <strong>Project Management</strong>
               </h4>

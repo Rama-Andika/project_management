@@ -12,36 +12,44 @@ import Api from "../../api";
 //import js cookie
 
 import Cookies from "js-cookie";
+
 import toast from "react-hot-toast";
+
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Form, Alert, Col, Card, Row, Button } from "react-bootstrap";
+import { Button, Card, Col, Row, Form, Alert } from "react-bootstrap";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useParams } from "react-router-dom";
 
-function ProjectCreate() {
+function ProjectEdit() {
   //title page
 
-  document.title = "Project Create";
+  document.title = "Project Edit";
 
   //state posts
 
   const [projectNames, setProjectNames] = useState([]);
+
   const [arrStatusProject, setArrStatusProject] = useState(Array.from(Array(projectNames.length)));
 
   //form project
+  const [projectid, setProjectId] = useState(0);
   const [name, setName] = useState("");
-  const [id, setId] = useState(0);
+  const [status, setStatus] = useState("");
   const [note, setNote] = useState("");
 
   //form project detail
+  const [projectNameId, setProjectNameId] = useState("");
   const [sequence, setSequence] = useState([]);
-  const [arrProjectStatus, setArrProjectStatus] = useState(Array.from(Array(projectNames.length)));
+  const [arrProjectStatus, setArrProjectStatus] = useState([]);
+  const [arrProjectNote, setArrProjectNote] = useState([]);
   const [file, setFile] = useState("-");
-  const [arrProjectNote, setArrProjectNote] = useState(Array.from(Array(projectNames.length)));
 
   const [validation, setValidation] = useState({});
 
   const [loading, setLoading] = useState(false);
+
+  const { id } = useParams();
 
   //token
 
@@ -50,6 +58,59 @@ function ProjectCreate() {
   //function "fetchData"
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const fetchProjectById = async () => {
+    setLoading(true);
+    await Api.get(`/api/project/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      setName(response.data.data.project_name);
+      setStatus(response.data.data.status);
+      setNote(response.data.data.note);
+      setProjectNameId(response.data.data.note);
+      setStatus(response.data.data.status);
+
+      const statusList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectStatus = projectDetail.project_status_id;
+        const updateProjectStatues = [...arrProjectStatus];
+        return (updateProjectStatues[i] = updateProjectStatus);
+      });
+
+      const noteList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectNote = projectDetail.project_note;
+        const updateProjectNotes = [...arrProjectNote];
+        return (updateProjectNotes[i] = updateProjectNote);
+      });
+
+      const sequenceList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectSequence = projectDetail.project_status.sequence;
+        const updateProjectSequences = [...sequence];
+        return (updateProjectSequences[i] = updateProjectSequence);
+      });
+
+      setArrProjectStatus(statusList);
+      setArrProjectNote(noteList);
+      setSequence(sequenceList);
+
+      setLoading(false);
+    });
+  };
+
+  const searchSequence = async (projectStatusId, index) => {
+    await Api.get(`api/searchSequence/${projectStatusId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      const updateSequence = response.data.data;
+
+      const updateSequences = [...sequence];
+      updateSequences[index] = updateSequence;
+      setSequence(updateSequences);
+    });
+  };
 
   const fetchProjectNames = async () => {
     setLoading(true);
@@ -70,55 +131,51 @@ function ProjectCreate() {
   //   console.log(project);
   // }, [project, name]);
 
-  const handleChangeFile = (e) => {
+  const handleChangeFile = (e, index) => {
     setFile(e.target.files[0]);
   };
 
   const handleChangeProjectStatus = (e, index) => {
     const updateProjectStatus = e.target.value;
-
-    const updateProjectStatues = [...arrProjectStatus];
-    updateProjectStatues[index] = updateProjectStatus;
-    setArrProjectStatus(updateProjectStatues);
+    if (updateProjectStatus === "") {
+      const updateProjectStatues = [...arrProjectStatus];
+      updateProjectStatues[index] = "";
+      setArrProjectStatus(updateProjectStatues);
+    } else {
+      const updateProjectStatues = [...arrProjectStatus];
+      updateProjectStatues[index] = updateProjectStatus;
+      setArrProjectStatus(updateProjectStatues);
+    }
   };
 
   const handleChangeProjectNote = (e, index) => {
     const updateProjectNote = e.target.value;
-
-    const updateProjectNotes = [...arrProjectNote];
-    updateProjectNotes[index] = updateProjectNote;
-    setArrProjectNote(updateProjectNotes);
+    if (updateProjectNote === "") {
+      const updateProjectNotes = [...arrProjectNote];
+      updateProjectNotes[index] = "";
+      setArrProjectNote(updateProjectNotes);
+    } else {
+      const updateProjectNotes = [...arrProjectNote];
+      updateProjectNotes[index] = updateProjectNote;
+      setArrProjectNote(updateProjectNotes);
+    }
   };
 
   const handleChangeName = (e) => {
     setName(e.target.value);
-    // const updateStatus = false;
+    const updateStatus = false;
 
-    // const updateStatuses = [...arrStatusProject];
-    // for (let index = 0; index < projectNames.length; index++) {
-    //   updateStatuses[index] = updateStatus;
-    // }
+    const updateStatuses = [...arrStatusProject];
+    for (let index = 0; index < projectNames.length; index++) {
+      updateStatuses[index] = updateStatus;
+    }
 
-    // setArrStatusProject(updateStatuses);
+    setArrStatusProject(updateStatuses);
   };
 
   // useEffect(() => {
   //   setStatusProjectDetail(statusProjectDetail);
   // }, [statusProjectDetail]);
-
-  const searchSequence = async (projectStatusId, index) => {
-    await Api.get(`api/searchSequence/${projectStatusId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((response) => {
-      const updateSequence = response.data.data;
-
-      const updateSequences = [...sequence];
-      updateSequences[index] = updateSequence;
-      setSequence(updateSequences);
-    });
-  };
 
   const handleProject = async (projectName, index) => {
     const updateStatus = false;
@@ -160,7 +217,6 @@ function ProjectCreate() {
 
     if (arrProjectNote[index] !== undefined && arrProjectStatus[index] !== undefined) {
       const formData = new FormData();
-      const status = "0";
       formData.append("project_id", id);
       formData.append("project_name", name);
       formData.append("status", status);
@@ -186,9 +242,8 @@ function ProjectCreate() {
             },
           });
 
-          setId(response.data.data.id);
+          setProjectId(response.data.data.id);
           searchSequence(arrProjectStatus[index], index);
-          // searchProject(projectName)
 
           setLoading(false);
           setValidation({});
@@ -267,13 +322,8 @@ function ProjectCreate() {
     //call function "fetchData"
 
     fetchProjectNames();
+    fetchProjectById();
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    //call function "fetchData"
-    //projectName.sequence === 1 || Math.max(...projectName.project_details.map((projectDetail) => projectDetail.sequence))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -325,7 +375,7 @@ function ProjectCreate() {
           <Col xs={12}>
             <Card className=" border-0 rounded shadow-sm">
               <Card.Header>
-                <span className="fw-bold">CREATE PROJECT</span>
+                <span className="fw-bold">EDIT PROJECT</span>
               </Card.Header>
 
               <Card.Body>
@@ -341,13 +391,22 @@ function ProjectCreate() {
                       <Form.Control type="hidden" value={id} />
 
                       <Form.Group className="mb-3">
+                        <Form.Label>Status</Form.Label>
+                        <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                          <option value="0">In Progress</option>
+                          <option value="1">Done</option>
+                        </Form.Select>
+                      </Form.Group>
+                      {validation.status && <Alert variant="danger">{validation.status}</Alert>}
+
+                      <Form.Group className="mb-3">
                         <Form.Label>Note</Form.Label>
                         <ReactQuill theme="snow" rows="5" value={note} onChange={(content) => setNote(content)} />
                       </Form.Group>
                       {validation.note && <Alert variant="danger">{validation.note}</Alert>}
 
                       {projectNames.slice(0, 1).map((projectName, i) => (
-                        <Card key={projectName.id} className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
+                        <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
                           <Card.Header className="text-white">{projectName.name}</Card.Header>
                           <Card.Body>
                             <Form.Group className="mb-3">
@@ -355,7 +414,7 @@ function ProjectCreate() {
                               <Form.Select value={arrProjectStatus[i]} onChange={(e) => handleChangeProjectStatus(e, i)}>
                                 <option value="">-- Select Status --</option>
                                 {projectName.project_statuses.map((projectStatus) => (
-                                  <option key={projectStatus.id} value={projectStatus.id}>{projectStatus.status}</option>
+                                  <option value={projectStatus.id}>{projectStatus.status}</option>
                                 ))}
                               </Form.Select>
                             </Form.Group>
@@ -407,7 +466,7 @@ function ProjectCreate() {
                                     <Form.Select value={arrProjectStatus[i]} onChange={(e) => handleChangeProjectStatus(e, i)}>
                                       <option value="">-- Select Status --</option>
                                       {projectName.project_statuses.map((projectStatus) => (
-                                        <option key={projectStatus.id} value={projectStatus.id}>{projectStatus.status}</option>
+                                        <option value={projectStatus.id}>{projectStatus.status}</option>
                                       ))}
                                     </Form.Select>
                                   </Form.Group>
@@ -457,4 +516,4 @@ function ProjectCreate() {
   );
 }
 
-export default ProjectCreate;
+export default ProjectEdit;

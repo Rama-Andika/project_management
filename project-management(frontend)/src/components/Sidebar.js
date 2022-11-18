@@ -20,7 +20,7 @@ const SidebarComponent = () => {
           {/* <MenuItem routerLink={<Link to="/projectDetail" />} active={splitLocation[1] === "projectDetail" ? true : false}>
           Project Detail
         </MenuItem> */}
-          <SubMenu label="Master Data" defaultOpen={splitLocation[1] === "projectName" || "projectStatus" || "user" ? true : false}>
+          <SubMenu label="Data Master" defaultOpen={splitLocation[1] === "projectName" || "projectStatus" || "user" ? true : false}>
             <MenuItem routerLink={<Link to="/projectName" />} active={splitLocation[1] === "projectName" ? true : false}>
               Project Name
             </MenuItem>

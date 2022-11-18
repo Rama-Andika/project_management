@@ -18,17 +18,22 @@ class CreateProjectDetailsTable extends Migration
             $table->unsignedBigInteger("project_id");
             $table->unsignedBigInteger("project_name_id");
             $table->integer("sequence");
-            $table->string("project_status");
+            $table->unsignedBigInteger("project_status_id");
             $table->string("document_attch");
             $table->text("project_note");
             $table->timestamps();
 
 
-            //projects relationship
-            // $table->foreign('project_id')->references('id')->on('projects');
+            //relationship projects
+            $table->foreign('project_id')->references('id')->on('projects');
+
+            //relationship project_names
+            $table->foreign('project_name_id')->references('id')->on('project_names');
+
+            //relationship project_stasuses
+            $table->foreign('project_status_id')->references('id')->on('project_statuses');
 
         });
-      
     }
 
     /**
