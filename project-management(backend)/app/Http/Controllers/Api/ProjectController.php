@@ -476,6 +476,25 @@ class ProjectController extends Controller
         return new ProjectResource(false, 'Data project gagal di hapus', null);
     }
 
+    public function deleteProjectDetail($project_id, $projectNameId)
+    {
+        $projectDetail = ProjectDetail::whereRaw('project_id = '.$project_id.' AND project_name_id = '.$projectNameId)->delete();
+
+        if ($projectDetail) {
+           
+                return new ProjectDetailResource(true, 'Data project detail berhasil di hapus', null);
+            
+            // $current_number = Project::whereId($project->id)->first()->number;
+            // $min_number = Project::orderBy($project->id)->first()->number;
+            // if($current_number > $min_number){
+
+            // }
+
+        }
+
+        return new ProjectResource(false, 'Data project gagal di hapus', null);
+    }
+
     public function downloadFile(Request $request)
     {
         $project = Project::find($request->project_id);

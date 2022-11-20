@@ -368,6 +368,25 @@ function ProjectEdit() {
   //   setIsChecked(temp);
   // };
 
+  const test = async () => {
+    console.log("delete project detail")
+  }
+
+  const deleteProjectDetail =  (id, projectName)=>{
+    // await Api.delete(`api/deleteProjectDetail/${id},${projectName}`,{
+    //   headers:{
+    //     Authorization:`Bearer ${token}`
+    //   }
+    // }).then(()=>{
+    //   fetchProjectById()
+    // })
+    test()
+    
+  }
+  
+
+  
+
   return (
     <React.Fragment>
       <LayoutAdmin>
@@ -456,8 +475,9 @@ function ProjectEdit() {
                           {/* {projectName.project_statuses.map((projectStatus)=>(
                             
                           ))} */}
-                          {projectName.sequence !== 1 && sequence[i - 1] === Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) && (
+                          {projectName.sequence !== 1 && sequence[i - 1] === Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) ? (
                             <>
+                            {console.log(sequence[i-1])}
                               <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
                                 <Card.Header className="text-white">{projectName.name}</Card.Header>
                                 <Card.Body>
@@ -500,6 +520,11 @@ function ProjectEdit() {
                                 </Card.Body>
                               </Card>
                             </>
+                          ) : (
+                            projectName.sequence !== 1 && sequence[i - 1] < Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) && (
+                              deleteProjectDetail()
+                            )
+                           
                           )}
                         </>
                       ))}

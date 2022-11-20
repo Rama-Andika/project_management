@@ -389,7 +389,7 @@ function ProjectCreate() {
                                 <Form.Group className="mb-4">
                                   <Form.Label>File</Form.Label>
                                   <Form.Control type="file" onChange={handleChangeFile} />
-                                  <Button
+                                  {/* <Button
                                     className="mt-3"
                                     onClick={() => {
                                       downloadFile(projectName.id);
@@ -397,7 +397,7 @@ function ProjectCreate() {
                                     disabled={file !== "-" ? false : true}
                                   >
                                     Download File
-                                  </Button>
+                                  </Button> */}
                                 </Form.Group>
                                 {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                               </>
