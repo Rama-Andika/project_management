@@ -17,6 +17,7 @@ import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
 import { Form, Alert, Col, Card, Row, Button } from "react-bootstrap";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import fileDownload from "js-file-download";
 
 function ProjectCreate() {
   //title page
@@ -32,11 +33,12 @@ function ProjectCreate() {
   const [name, setName] = useState("");
   const [id, setId] = useState(0);
   const [note, setNote] = useState("");
+  const [status, setStatus] = useState("0");
 
   //form project detail
   const [sequence, setSequence] = useState([]);
   const [arrProjectStatus, setArrProjectStatus] = useState(Array.from(Array(projectNames.length)));
-  const [file, setFile] = useState("-");
+  const [arrFile, setArrFile] = useState(Array.from(Array(projectNames.length)));
   const [arrProjectNote, setArrProjectNote] = useState(Array.from(Array(projectNames.length)));
 
   const [validation, setValidation] = useState({});
@@ -64,14 +66,68 @@ function ProjectCreate() {
     });
   };
 
+  const fetchProjectById = async () => {
+    setLoading(true);
+    await Api.get(`/api/project/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      setName(response.data.data.project_name);
+      setStatus(response.data.data.status);
+      setNote(response.data.data.note);
+
+      const statusList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectStatus = projectDetail.project_status_id;
+        const updateProjectStatues = [...arrProjectStatus];
+        return (updateProjectStatues[i] = updateProjectStatus);
+      });
+
+      const noteList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectNote = projectDetail.project_note;
+        const updateProjectNotes = [...arrProjectNote];
+        return (updateProjectNotes[i] = updateProjectNote);
+      });
+
+      const sequenceList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectSequence = projectDetail.project_status.sequence;
+        const updateProjectSequences = [...sequence];
+        return (updateProjectSequences[i] = updateProjectSequence);
+      });
+
+      const fileList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectFile = projectDetail.document_attch;
+        const updateProjectFiles = [...arrFile];
+        return (updateProjectFiles[i] = updateProjectFile);
+      });
+
+      setArrProjectStatus(statusList);
+      setArrProjectNote(noteList);
+      setSequence(sequenceList);
+      setArrFile(fileList);
+
+      setLoading(false);
+    });
+  };
+
   // useEffect(() => {
   //   fetchProjectByName(name);
 
   //   console.log(project);
   // }, [project, name]);
 
-  const handleChangeFile = (e) => {
-    setFile(e.target.files[0]);
+  const handleChangeFile = (e, index) => {
+    const updateFile = e.target.files[0];
+
+    const updateFiles = [...arrFile];
+    updateFiles[index] = updateFile;
+    setArrFile(updateFiles);
+
+    const updateStatus = false;
+
+    const updateStatuses = [...arrStatusProject];
+    updateStatuses[index] = updateStatus;
+    setArrStatusProject(updateStatuses);
   };
 
   const handleChangeProjectStatus = (e, index) => {
@@ -160,14 +216,13 @@ function ProjectCreate() {
 
     if (arrProjectNote[index] !== undefined && arrProjectStatus[index] !== undefined) {
       const formData = new FormData();
-      const status = "0";
       formData.append("project_id", id);
       formData.append("project_name", name);
       formData.append("status", status);
       formData.append("note", note);
       formData.append("project_name_id", projectName);
       formData.append("project_status_id", arrProjectStatus[index]);
-      formData.append("document_attch", file);
+      formData.append("document_attch", arrFile[index]);
       formData.append("project_note", arrProjectNote[index]);
 
       await Api.post("/api/project/", formData, {
@@ -192,6 +247,7 @@ function ProjectCreate() {
 
           setLoading(false);
           setValidation({});
+
           const updateStatus = true;
 
           const updateStatuses = [...arrStatusProject];
@@ -209,6 +265,7 @@ function ProjectCreate() {
           const updateProjectNotes = [...arrProjectNote];
           updateProjectNotes[index] = updateProjectNote;
           setArrProjectNote(updateProjectNotes);
+          fetchProjectById();
 
           // projectNames.map((p, i) => {
           //   handleProjectDetail(projectName + i, sequence + (i + 1));
@@ -263,24 +320,19 @@ function ProjectCreate() {
     // }
   };
 
-  const downloadFile = async (projectName) => {
-    const formData = new FormData();
-    formData.append("project_id", id);
-    formData.append("project_name_id", projectName);
-    formData.append("document_attch", file);
+  const downloadFile = async (fileDl) => {
+    // const formData = new FormData();
+    // formData.append("project_id", id);
+    // formData.append("project_name_id", projectName);
+    // formData.append("document_attch", file);
 
-    await Api.get("api/downloadFile", formData, {
+    await Api.get(`api/downloadFile/${fileDl}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       responseType: "blob",
     }).then((response) => {
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "file.pdf"); //or any other extension
-      document.body.appendChild(link);
-      link.click();
+      fileDownload(response.data, fileDl);
     });
   };
 
@@ -388,16 +440,14 @@ function ProjectCreate() {
                               <>
                                 <Form.Group className="mb-4">
                                   <Form.Label>File</Form.Label>
-                                  <Form.Control type="file" onChange={handleChangeFile} />
-                                  {/* <Button
-                                    className="mt-3"
-                                    onClick={() => {
-                                      downloadFile(projectName.id);
-                                    }}
-                                    disabled={file !== "-" ? false : true}
-                                  >
-                                    Download File
+                                  <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
+
+                                  {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
+                                  <i class="fa-solid fa-download"></i> Download File
                                   </Button> */}
+                                  <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                    <i class="fa-solid fa-download"></i> Download File
+                                  </Button>
                                 </Form.Group>
                                 {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                               </>
@@ -451,7 +501,13 @@ function ProjectCreate() {
                                     <>
                                       <Form.Group className="mb-3">
                                         <Form.Label>File</Form.Label>
-                                        <Form.Control type="file" onChange={handleChangeFile} />
+                                        <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
+                                        {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
+                                          <i class="fa-solid fa-download"></i> Download File
+                                        </Button> */}
+                                        <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                          <i class="fa-solid fa-download"></i> Download File
+                                        </Button>
                                       </Form.Group>
                                       {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                                     </>

@@ -20,6 +20,7 @@ import { Button, Card, Col, Row, Form, Alert } from "react-bootstrap";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useParams } from "react-router-dom";
+import fileDownload from "js-file-download";
 
 function ProjectEdit() {
   //title page
@@ -43,7 +44,7 @@ function ProjectEdit() {
   const [sequence, setSequence] = useState([]);
   const [arrProjectStatus, setArrProjectStatus] = useState([]);
   const [arrProjectNote, setArrProjectNote] = useState([]);
-  const [file, setFile] = useState("-");
+  const [arrFile, setArrFile] = useState(Array.from(Array(projectNames.length)));
 
   const [validation, setValidation] = useState({});
 
@@ -61,6 +62,7 @@ function ProjectEdit() {
 
   const fetchProjectById = async () => {
     setLoading(true);
+
     await Api.get(`/api/project/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -69,8 +71,6 @@ function ProjectEdit() {
       setName(response.data.data.project_name);
       setStatus(response.data.data.status);
       setNote(response.data.data.note);
-      setProjectNameId(response.data.data.note);
-      setStatus(response.data.data.status);
 
       const statusList = response.data.data.project_details.map((projectDetail, i) => {
         const updateProjectStatus = projectDetail.project_status_id;
@@ -90,9 +90,24 @@ function ProjectEdit() {
         return (updateProjectSequences[i] = updateProjectSequence);
       });
 
+      const fileList = response.data.data.project_details.map((projectDetail, i) => {
+        const updateProjectFile = projectDetail.document_attch;
+        const updateProjectFiles = [...arrFile];
+        return (updateProjectFiles[i] = updateProjectFile);
+      });
+
+      // const statusListproject = projectNames.map((p, i) => {
+      //   const updateStatus = false;
+
+      //   const updateStatuses = [...arrStatusProject];
+      //   return (updateStatuses[i] = updateStatus);
+      // });
+
       setArrProjectStatus(statusList);
       setArrProjectNote(noteList);
       setSequence(sequenceList);
+      setArrFile(fileList);
+      // setArrStatusProject(statusListproject);
 
       setLoading(false);
     });
@@ -108,6 +123,7 @@ function ProjectEdit() {
 
       const updateSequences = [...sequence];
       updateSequences[index] = updateSequence;
+
       setSequence(updateSequences);
     });
   };
@@ -132,7 +148,17 @@ function ProjectEdit() {
   // }, [project, name]);
 
   const handleChangeFile = (e, index) => {
-    setFile(e.target.files[0]);
+    const updateFile = e.target.files[0];
+
+    const updateFiles = [...arrFile];
+    updateFiles[index] = updateFile;
+    setArrFile(updateFiles);
+
+    const updateStatus = false;
+
+    const updateStatuses = [...arrStatusProject];
+    updateStatuses[index] = updateStatus;
+    setArrStatusProject(updateStatuses);
   };
 
   const handleChangeProjectStatus = (e, index) => {
@@ -163,14 +189,6 @@ function ProjectEdit() {
 
   const handleChangeName = (e) => {
     setName(e.target.value);
-    const updateStatus = false;
-
-    const updateStatuses = [...arrStatusProject];
-    for (let index = 0; index < projectNames.length; index++) {
-      updateStatuses[index] = updateStatus;
-    }
-
-    setArrStatusProject(updateStatuses);
   };
 
   // useEffect(() => {
@@ -223,7 +241,7 @@ function ProjectEdit() {
       formData.append("note", note);
       formData.append("project_name_id", projectName);
       formData.append("project_status_id", arrProjectStatus[index]);
-      formData.append("document_attch", file);
+      formData.append("document_attch", arrFile[index]);
       formData.append("project_note", arrProjectNote[index]);
 
       await Api.post("/api/project/", formData, {
@@ -264,6 +282,8 @@ function ProjectEdit() {
           const updateProjectNotes = [...arrProjectNote];
           updateProjectNotes[index] = updateProjectNote;
           setArrProjectNote(updateProjectNotes);
+
+          fetchProjectById();
 
           // projectNames.map((p, i) => {
           //   handleProjectDetail(projectName + i, sequence + (i + 1));
@@ -311,6 +331,14 @@ function ProjectEdit() {
     // }
 
     handleProject(projectName, index);
+
+    // if (sequence[index] !== undefined) {
+    //   projectNames.map((nameProject) => {
+    //     if (sequence[index] < Math.max(...nameProject.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName && projectStatus.sequence), 0)) {
+    //       deleteProjectDetail(id, projectName);
+    //     }
+    //   });
+    // }
 
     // if (project !== "") {
     //   console.log(project);
@@ -368,24 +396,31 @@ function ProjectEdit() {
   //   setIsChecked(temp);
   // };
 
-  const test = async () => {
-    console.log("delete project detail")
-  }
+  // const test = async (id, projectName) => {
+  //   await Api.delete(`api/deleteProjectDetail/${id},${projectName}`, {
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   }).then(() => {
+  //     fetchProjectById();
+  //   });
+  // };
 
-  const deleteProjectDetail =  (id, projectName)=>{
-    // await Api.delete(`api/deleteProjectDetail/${id},${projectName}`,{
-    //   headers:{
-    //     Authorization:`Bearer ${token}`
-    //   }
-    // }).then(()=>{
-    //   fetchProjectById()
-    // })
-    test()
-    
-  }
-  
+  const downloadFile = async (fileDl) => {
+    // const formData = new FormData();
+    // formData.append("project_id", id);
+    // formData.append("project_name_id", projectName);
+    // formData.append("document_attch", file);
 
-  
+    await Api.get(`api/downloadFile/${fileDl}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: "blob",
+    }).then((response) => {
+      fileDownload(response.data, fileDl);
+    });
+  };
 
   return (
     <React.Fragment>
@@ -443,7 +478,14 @@ function ProjectEdit() {
                               <>
                                 <Form.Group className="mb-3">
                                   <Form.Label>File</Form.Label>
-                                  <Form.Control type="file" onChange={handleChangeFile} />
+                                  <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
+                                  <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                    <i class="fa-solid fa-download"></i> Download File
+                                  </Button>
+                                 
+                                  {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
+                                    <i class="fa-solid fa-download"></i> Download File
+                                  </Button> */}
                                 </Form.Group>
                                 {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                               </>
@@ -468,6 +510,7 @@ function ProjectEdit() {
                           </Card.Body>
                         </Card>
                       ))}
+                      {/* {console.log(sequence)} */}
 
                       {projectNames.map((projectName, i) => (
                         <>
@@ -475,9 +518,8 @@ function ProjectEdit() {
                           {/* {projectName.project_statuses.map((projectStatus)=>(
                             
                           ))} */}
-                          {projectName.sequence !== 1 && sequence[i - 1] === Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) ? (
+                          {projectName.sequence !== 1 && sequence[i - 1] === Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) && (
                             <>
-                            {console.log(sequence[i-1])}
                               <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
                                 <Card.Header className="text-white">{projectName.name}</Card.Header>
                                 <Card.Body>
@@ -496,7 +538,14 @@ function ProjectEdit() {
                                     <>
                                       <Form.Group className="mb-3">
                                         <Form.Label>File</Form.Label>
-                                        <Form.Control type="file" onChange={handleChangeFile} />
+                                        <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
+
+                                        <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                          <i class="fa-solid fa-download"></i> Download File
+                                        </Button>
+                                        {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
+                                        <i class="fa-solid fa-download"></i> Download File
+                                        </Button> */}
                                       </Form.Group>
                                       {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                                     </>
@@ -520,11 +569,6 @@ function ProjectEdit() {
                                 </Card.Body>
                               </Card>
                             </>
-                          ) : (
-                            projectName.sequence !== 1 && sequence[i - 1] < Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) && (
-                              deleteProjectDetail()
-                            )
-                           
                           )}
                         </>
                       ))}

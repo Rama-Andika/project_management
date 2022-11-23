@@ -41,7 +41,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     //  Route::get('projectNameByName/{name}', [ProjectNameController::class, 'showName']);
      Route::apiResource('project', ProjectController::class, ['except' => ['create', 'edit']]);
      Route::post('editProjectDetail/{id}', [ProjectController::class, 'store']);
-     Route::get('downloadFile', [ProjectController::class, 'downloadFile']);
+     Route::get('downloadFile/{file}', [ProjectController::class, 'downloadFile']);
      Route::delete('deleteProjectDetail/{project_id},{projectNameId}', [ProjectController::class, 'deleteProjectDetail']);
 
      Route::apiResource('projectStatus', ProjectStatusController::class, ['except' => ['create', 'edit']]);

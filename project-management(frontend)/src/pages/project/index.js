@@ -102,12 +102,12 @@ function ProjectIndex() {
   };
 
   const fetchProjectName = async () => {
-    await Api.get("/api/projectName", {
+    await Api.get("/api/projectList", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNames(response.data.data.data);
+      setProjectNames(response.data.data);
     });
   };
 
@@ -219,6 +219,7 @@ function ProjectIndex() {
                             },
                           });
                           fetchData();
+                          fetchProjectNumber()
                         });
                         onClose();
                       }}
@@ -332,7 +333,7 @@ function ProjectIndex() {
                       </tr>
                     ) : (
                       <>
-                        {projects === "" ? (
+                        {!projects.length > 0 ? (
                           <tr>
                             <td colSpan={5 + projectNames.length} className="text-center py-4">
                               Data Not Found

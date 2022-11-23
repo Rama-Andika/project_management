@@ -6,7 +6,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, Container, Navbar, NavDropdown } from "react-bootstrap";
 import SidebarComponent from "../components/Sidebar";
 
-
 const LayoutAdmin = ({ children }) => {
   const [user, setUser] = useState({});
   const [sidebarToggle, setSidebarToggle] = useState(false);
@@ -72,28 +71,29 @@ const LayoutAdmin = ({ children }) => {
   return (
     <>
       <div className="d-flex sb-sidenav-toggled" id="wrapper">
-        <div style={{ backgroundColor: 'white' }} id="sidebar-wrapper">
+        <div style={{ backgroundColor: "white" }} id="sidebar-wrapper">
           <div className="sidebar-heading bg-light text-center">
-            <strong>Project Management</strong>
+            <strong>
+              <Link to="/project" style={{ textDecoration: 'none', color: 'white' }}>Project Management</Link>
+            </strong>
           </div>
 
           <SidebarComponent />
         </div>
 
         <div id="page-content-wrapper">
-          <Navbar className="navbar" bg="light" expand="sm"> 
+          <Navbar className="navbar" bg="light" expand="sm">
             <Container fluid>
               <Button variant="success-dark" onClick={sidebarToggleHandler}>
                 <i className="fa fa-list-ul"></i>
               </Button>
 
               <Navbar.Toggle aria-controls="basic-navbar-nav" />
-              <Navbar.Collapse  id="basic-navbar-nav">
+              <Navbar.Collapse id="basic-navbar-nav">
                 <ul className="navbar-nav ms-auto mt-2 mt-lg-0">
                   <NavDropdown title={user.name} className="fw-bold" id="basic-nav-dropdown">
-
                     <NavDropdown.Item as={Link} to="/project">
-                      Project 
+                      Project
                     </NavDropdown.Item>
 
                     {/* <NavDropdown.Item as={Link} to="/projectDetail">
@@ -116,9 +116,7 @@ const LayoutAdmin = ({ children }) => {
 
                     <NavDropdown.Divider />
 
-                    <NavDropdown.Item onClick={logoutHandler}>
-                       Logout
-                    </NavDropdown.Item>
+                    <NavDropdown.Item onClick={logoutHandler}>Logout</NavDropdown.Item>
                   </NavDropdown>
                 </ul>
               </Navbar.Collapse>

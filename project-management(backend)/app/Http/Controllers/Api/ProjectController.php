@@ -8,6 +8,7 @@ use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Models\ProjectDetail;
 use App\Models\ProjectName;
+use App\Models\ProjectStatus;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -134,8 +135,13 @@ class ProjectController extends Controller
                     Storage::disk('local')->delete('public/document' . basename($selected_document));
 
 
+                    $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+
+
                     $document_attch = $request->file('document_attch');
-                    $document_attch->storeAs('public/document', $document_attch->hashName());
+                    $document_attch->storeAs('public/document', $filenameWithExt);
+
+                    // $document_attch->storeAs('public/document', $document_attch->hashName());
 
                     $projectDetail = ProjectDetail::whereId($selected_projectDetail_id)
                         ->update([
@@ -143,11 +149,18 @@ class ProjectController extends Controller
                             'project_name_id'   => $request->project_name_id,
                             'sequence'   => $update_sequence,
                             'project_status_id'   => $request->project_status_id,
-                            'document_attch'   => $document_attch->hashName(),
+                            'document_attch'   => $filenameWithExt,
                             'project_note'   => $request->project_note,
                         ]);
+
+                    $maxSequence = ProjectStatus::where('project_name_id', '=', $request->project_name_id)->max('sequence');
+                    $currentSequence = ProjectStatus::whereId($request->project_status_id)->value('sequence');
+
+                    if ($currentSequence < $maxSequence) {
+                        ProjectDetail::whereRaw('project_id = ' . $project->id . ' AND sequence > ' . $update_sequence)->delete();
+                    }
                 } else {
-                    $projectDetail = ProjectDetail::whereId($selected_projectDetail_id)
+                    $projectDetail = ProjectDetail::where('id', '=', $selected_projectDetail_id)
                         ->update([
                             'project_id'   => $project->id,
                             'project_name_id'   => $request->project_name_id,
@@ -155,6 +168,13 @@ class ProjectController extends Controller
                             'project_status_id'   => $request->project_status_id,
                             'project_note'   => $request->project_note,
                         ]);
+
+                    $maxSequence = ProjectStatus::where('project_name_id', '=', $request->project_name_id)->max('sequence');
+                    $currentSequence = ProjectStatus::whereId($request->project_status_id)->value('sequence');
+
+                    if ($currentSequence < $maxSequence) {
+                        ProjectDetail::whereRaw('project_id = ' . $project->id . ' AND sequence > ' . $update_sequence)->delete();
+                    }
                 }
 
                 if ($projectDetail) {
@@ -174,7 +194,7 @@ class ProjectController extends Controller
                     'note' => 'required',
                     'project_name_id'   => 'required',
                     'project_status_id'   => 'required',
-                    'document_attch'   => 'required',
+                    'document_attch'   => '',
                     'project_note'   => 'required',
                 ]);
 
@@ -187,8 +207,11 @@ class ProjectController extends Controller
 
                 if ($request->hasFile('document_attch')) {
 
+                    $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+
+
                     $document_attch = $request->file('document_attch');
-                    $document_attch->storeAs('public/document', $document_attch->hashName());
+                    $document_attch->storeAs('public/document', $filenameWithExt);
 
                     $projectDetail = ProjectDetail::create([
 
@@ -196,7 +219,7 @@ class ProjectController extends Controller
                         'project_name_id'   => $request->project_name_id,
                         'sequence'   => $sequence,
                         'project_status_id'   => $request->project_status_id,
-                        'document_attch'   => $document_attch->hashName(),
+                        'document_attch'   => $filenameWithExt,
                         'project_note'   => $request->project_note,
 
                     ]);
@@ -231,7 +254,7 @@ class ProjectController extends Controller
                 'note' => 'required',
                 'project_name_id'   => 'required',
                 'project_status_id'   => 'required',
-                'document_attch'   => 'required',
+                'document_attch'   => '',
                 'project_note'   => 'required',
             ]);
 
@@ -265,13 +288,11 @@ class ProjectController extends Controller
 
             $project_id = $project->id;
             if ($request->hasFile('document_attch')) {
-                // $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
-                // $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-                // $extension = $request->file('document_attch')->getClientOriginalExtension();
-                // $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+                $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
+
 
                 $document_attch = $request->file('document_attch');
-                $document_attch->storeAs('public/document', $document_attch->hashName());
+                $document_attch->storeAs('public/document', $filenameWithExt);
 
                 $projectDetail = ProjectDetail::create([
 
@@ -279,7 +300,7 @@ class ProjectController extends Controller
                     'project_name_id'   => $request->project_name_id,
                     'sequence'   => $sequence,
                     'project_status_id'   => $request->project_status_id,
-                    'document_attch'   => $document_attch->hashName(),
+                    'document_attch'   => $filenameWithExt,
                     'project_note'   => $request->project_note,
 
                 ]);
@@ -478,12 +499,12 @@ class ProjectController extends Controller
 
     public function deleteProjectDetail($project_id, $projectNameId)
     {
-        $projectDetail = ProjectDetail::whereRaw('project_id = '.$project_id.' AND project_name_id = '.$projectNameId)->delete();
+        $projectDetail = ProjectDetail::whereRaw('project_id = ' . $project_id . ' AND project_name_id = ' . $projectNameId)->delete();
 
         if ($projectDetail) {
-           
-                return new ProjectDetailResource(true, 'Data project detail berhasil di hapus', null);
-            
+
+            return new ProjectDetailResource(true, 'Data project detail berhasil di hapus', null);
+
             // $current_number = Project::whereId($project->id)->first()->number;
             // $min_number = Project::orderBy($project->id)->first()->number;
             // if($current_number > $min_number){
@@ -495,16 +516,18 @@ class ProjectController extends Controller
         return new ProjectResource(false, 'Data project gagal di hapus', null);
     }
 
-    public function downloadFile(Request $request)
+    public function downloadFile($file)
     {
-        $project = Project::find($request->project_id);
+        // $project = Project::find($request->project_id);
 
-        if ($project != null) {
-            $selected_projectDetail_id = ProjectDetail::whereRaw('project_id = "' . $project->id . '" AND project_name_id = "' . $request->project_name_id . '" AND document_attch = "'.$request->document_attch)->value('document_attch');
-            if ($selected_projectDetail_id != null) {
-                $myFile = storage_path('document/' . $selected_projectDetail_id);
-                return response()->download($myFile);
-            }
-        }
+        // if ($project != null) {
+        //     $selected_projectDetail_id = ProjectDetail::whereRaw('project_id = "' . $project->id . '" AND project_name_id = "' . $request->project_name_id . '" AND document_attch = "' . $request->document_attch)->value('document_attch');
+        //     if ($selected_projectDetail_id != null) {
+        //         $myFile = storage_path('document/' . $selected_projectDetail_id);
+        //         return response()->download($myFile);
+        //     }
+        // }
+
+        return response()->download(storage_path('/app/public/document/'. $file));
     }
 }
