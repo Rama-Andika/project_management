@@ -479,10 +479,10 @@ function ProjectEdit() {
                                 <Form.Group className="mb-3">
                                   <Form.Label>File</Form.Label>
                                   <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
-                                  <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                  <Button variant="link" href={arrFile[i]} download disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button>
-                                 
+
                                   {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button> */}
@@ -540,7 +540,7 @@ function ProjectEdit() {
                                         <Form.Label>File</Form.Label>
                                         <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
 
-                                        <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                        <Button variant="link" href={arrFile[i]} download disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
                                           <i class="fa-solid fa-download"></i> Download File
                                         </Button>
                                         {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
