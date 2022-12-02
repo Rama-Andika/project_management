@@ -102,9 +102,6 @@ class ProjectController extends Controller
         $last_sequence = ProjectDetail::orderBy('id', 'desc')->first()->sequence ?? 0;
         $sequence = str_pad($last_sequence + 1, $last_sequence);
 
-
-
-
         if ($project != null) {
             $selected_projectDetail_id = ProjectDetail::whereRaw('project_id = "' . $project->id . '" AND project_name_id = "' . $request->project_name_id . '"')->value('id');
             if ($selected_projectDetail_id != null) {
@@ -112,10 +109,10 @@ class ProjectController extends Controller
                 $validator = Validator::make($request->all(), [
 
                     'project_name'     => 'required|unique:projects,project_name,' . $project->id,
-                    'status'     => 'required|integer',
                     'note' => 'required',
                     'project_name_id'   => 'required',
                     'project_status_id'   => 'required',
+                    'document_attch'   => 'max:3000',
                     'project_note'   => 'required',
                 ]);
 
@@ -124,11 +121,17 @@ class ProjectController extends Controller
                     return response()->json($validator->errors(), 422);
                 }
 
+                $projectCount = ProjectName::get()->count();
+
+                $status=0;
+
                 $project->update([
                     'project_name' => $request->project_name,
-                    'status' => $request->status,
+                    'status' => $status,
                     'note' => $request->note
                 ]);
+
+
 
                 if ($request->file('document_attch')) {
                     $selected_document = ProjectDetail::whereRaw('project_id = "' . $project->id . '" AND project_name_id = "' . $request->project_name_id . '"')->value('document_attch');
@@ -169,6 +172,8 @@ class ProjectController extends Controller
                             'project_note'   => $request->project_note,
                         ]);
 
+                        
+
                     $maxSequence = ProjectStatus::where('project_name_id', '=', $request->project_name_id)->max('sequence');
                     $currentSequence = ProjectStatus::whereId($request->project_status_id)->value('sequence');
 
@@ -176,6 +181,17 @@ class ProjectController extends Controller
                         ProjectDetail::whereRaw('project_id = ' . $project->id . ' AND sequence > ' . $update_sequence)->delete();
                     }
                 }
+
+                $currentSeq = ProjectStatus::whereId($request->project_status_id)->value('sequence');
+                $maxSeq = ProjectStatus::where('project_name_id', '=', $request->project_name_id)->max('sequence');
+
+                $projectDetailCount = projectDetail::whereRaw('project_id = ' . $project->id)->get()->count();
+                if ($projectCount === $projectDetailCount && $currentSeq == $maxSeq) {
+                    $status = 1;
+                }
+                $project->update([
+                    'status' => $status,
+                ]);
 
                 if ($projectDetail) {
                     if ($project) {
@@ -190,11 +206,10 @@ class ProjectController extends Controller
                 $validator = Validator::make($request->all(), [
 
                     'project_name'     => 'required',
-                    'status'     => 'required|integer',
                     'note' => 'required',
                     'project_name_id'   => 'required',
                     'project_status_id'   => 'required',
-                    'document_attch'   => '',
+                    'document_attch'   => 'max:3000',
                     'project_note'   => 'required',
                 ]);
 
@@ -203,7 +218,13 @@ class ProjectController extends Controller
                     return response()->json($validator->errors(), 422);
                 }
 
+                $projectCount = ProjectName::get()->count();
 
+                $status = 0;
+
+                $project->update([
+                    'status' => $status,
+                ]);
 
                 if ($request->hasFile('document_attch')) {
 
@@ -235,6 +256,16 @@ class ProjectController extends Controller
 
                     ]);
                 }
+                $currentSeq = ProjectStatus::whereId($projectDetail->project_status_id)->value('sequence');
+                $maxSeq = ProjectStatus::where('project_name_id', '=', $projectDetail->project_name_id)->max('sequence');
+                $projectDetailCount = projectDetail::whereRaw('project_id = ' . $projectDetail->project_id)->get()->count();
+                if ($projectCount == $projectDetailCount && $currentSeq == $maxSeq) {
+                    $status = 1;
+                }
+
+                $project->update([
+                    'status' => $status,
+                ]);
 
                 if ($projectDetail) {
                     if ($project) {
@@ -250,11 +281,10 @@ class ProjectController extends Controller
             $validator = Validator::make($request->all(), [
 
                 'project_name'     => 'required|unique:projects',
-                'status'     => 'required|integer',
                 'note' => 'required',
                 'project_name_id'   => 'required',
                 'project_status_id'   => 'required',
-                'document_attch'   => '',
+                'document_attch'   => 'max:3000',
                 'project_note'   => 'required',
             ]);
 
@@ -264,6 +294,17 @@ class ProjectController extends Controller
 
                 return response()->json($validator->errors(), 422);
             }
+
+
+            // $max_sequence = ProjectStatus::where('project_name_id', '=', $request->project_name_id)->max('sequence');
+            // $current_seq = ProjectStatus::where('id', '=', $request->project_status_id)->value('sequence');
+            // if ($max_sequence == $current_seq) {
+            //     $status = "1";
+            // } else {
+            //     $status = "0";
+            // }
+
+            $status = 0;
 
             $last_sequence = ProjectDetail::orderBy('id', 'desc')->first()->sequence ?? 0;
             $number = IdGenerator::generate(['table' => 'projects', 'field' => 'number', 'length' => 14, 'prefix' => 'PRJ-' . date("ym") . "-"]);
@@ -277,13 +318,16 @@ class ProjectController extends Controller
 
                 'project_name' => $request->project_name,
 
-                'status' => $request->status,
+                'status' => $status,
 
                 'note' => $request->note,
 
                 'prefix_number' => 'PRJ/' . date("ym"),
 
             ]);
+
+            $projectCount = ProjectName::get()->count();
+
 
 
             $project_id = $project->id;
@@ -386,7 +430,16 @@ class ProjectController extends Controller
             //         }
             //     }
             // }
+            $currentSeq = ProjectStatus::whereId($projectDetail->project_status_id)->value('sequence');
+            $maxSeq = ProjectStatus::where('project_name_id', '=', $projectDetail->project_name_id)->max('sequence');
 
+            $projectDetailCount = projectDetail::whereRaw('project_id = ' . $projectDetail->project_id)->get()->count();
+            if ($projectCount === $projectDetailCount && $currentSeq == $maxSeq) {
+                $status = 1;
+            }
+            $project->update([
+                'status' => $status,
+            ]);
             if ($projectDetail) {
                 if ($project) {
                     return new ProjectResource(true, 'Data Project Berhasil Disimpan!', $project);
@@ -528,6 +581,6 @@ class ProjectController extends Controller
         //     }
         // }
 
-        return response()->download(storage_path('/app/public/document/'. $file));
+        return response()->download(storage_path('/app/public/document/' . $file));
     }
 }

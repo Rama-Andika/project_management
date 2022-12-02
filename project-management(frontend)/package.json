@@ -9,6 +9,7 @@
     "axios": "^0.27.2",
     "bootstrap": "^5.2.1",
     "date-fns": "^2.29.3",
+    "downloadjs": "^1.4.7",
     "js-cookie": "^3.0.1",
     "js-file-download": "^0.4.12",
     "mapbox-gl": "^2.10.0",

@@ -36,6 +36,7 @@ Route::group(['middleware' => 'auth:api'], function () {
      //category resource
      Route::apiResource('projectName', ProjectNameController::class, ['except' => ['create', 'edit']]);
      Route::get('projectList', [ProjectNameController::class, 'projectList']);
+     Route::get('sortProject/{nameDirect}', [ProjectNameController::class, 'sortProject']);
      Route::get('numberList', [ProjectController::class, 'numberList']);
 
     //  Route::get('projectNameByName/{name}', [ProjectNameController::class, 'showName']);
@@ -45,7 +46,8 @@ Route::group(['middleware' => 'auth:api'], function () {
      Route::delete('deleteProjectDetail/{project_id},{projectNameId}', [ProjectController::class, 'deleteProjectDetail']);
 
      Route::apiResource('projectStatus', ProjectStatusController::class, ['except' => ['create', 'edit']]);
-     Route::get('searchSequence/{id}', [ProjectStatusController::class, 'searchMaxSequence']);
+     Route::get('searchSequence/{id}', [ProjectStatusController::class, 'searchSequence']);
+     Route::get('searchMaxSequence/{project_name_id}', [ProjectStatusController::class, 'searchMaxSequence']);
 
      Route::apiResource('projectDetail', ProjectDetailController::class, ['except' => ['create', 'edit']]);
 

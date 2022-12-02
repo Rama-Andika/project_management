@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Col, Form, Modal, Row, Spinner, Table } from "react-bootstrap";
+import { Alert, Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import LayoutAdmin from "../../layouts/Admin";
 import Api from "../../api";
 import Cookies from "js-cookie";
@@ -6,6 +6,19 @@ import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 import PaginationComponent from "../../components/Pagination";
+import Search from "../../components/Search";
+import Loading from "../../components/Loading";
+import Addbutton from "../../components/Addbutton";
+import EditAction from "../../components/EditAction";
+import DeleteAction from "../../components/DeleteAction";
+import TableHead from "../../components/table/TableHead";
+
+const columns = [
+  { label: "Name", accessor: "name", sortable: true },
+  { label: "Username", accessor: "username", sortable: true },
+  { label: "Email", accessor: "email", sortable: false },
+  { label: "Actions", accessor: "actions", sortable: false },
+];
 
 const UsersIndex = () => {
   document.title = "Users";
@@ -19,7 +32,6 @@ const UsersIndex = () => {
   const [perPage, setPerPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
-  const [searchParam] = useState(["name", "email"]);
   const [showModal, setShowModal] = useState(false);
   const [blur, setBlur] = useState(0);
   const [edit, setEdit] = useState({});
@@ -214,7 +226,7 @@ const UsersIndex = () => {
     });
   };
 
-  const searchHandlder = (e) => {
+  const searchHandler = (e) => {
     e.preventDefault();
 
     fetchData(1, q);
@@ -228,7 +240,7 @@ const UsersIndex = () => {
     }
   };
   return (
-    <LayoutAdmin>
+    <LayoutAdmin blur={blur}>
       <Row className="mt-4">
         <Col>
           <Card className="border-0 rounded shadow-sm" style={{ filter: `blur(${blur}px)` }}>
@@ -240,37 +252,19 @@ const UsersIndex = () => {
             <Card.Body>
               <Row>
                 <Col xs={10}>
-                  <form onSubmit={searchHandlder} className="form-group">
-                    <div className="input-group mb-3">
-                      <input type="text" className="form-control" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search by status name" />
-                      <button type="submit" className="btn btn-md btn-success">
-                        <i className="fa fa-search"></i> SEARCH
-                      </button>
-                    </div>
-                  </form>
+                  <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name='name, username, or email'/>
                 </Col>
                 <Col xs={2}>
-                  <Button className="rounded-circle float-end" size="sm" style={{ background: "#06d6a0" }} onClick={handleShowModal}>
-                    <i className="fa-solid fa-plus fa-lg"></i>
-                  </Button>
+                  <Addbutton size="md" onClick={handleShowModal} />
                 </Col>
               </Row>
               <Table responsive bordered hover>
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+                <TableHead columns={columns} />
                 <tbody>
                   {loading ? (
                     <tr className="text-center py-4">
                       <td colSpan={5}>
-                        <Spinner animation="border" role="status" size="lg" />
-                        <span className="visually-hidden">...loading</span>
+                        <Loading size="lg" />
                       </td>
                     </tr>
                   ) : !users.length > 0 ? (
@@ -282,30 +276,17 @@ const UsersIndex = () => {
                   ) : (
                     users.map((user, index) => (
                       <tr key={index}>
-                        <td>{++index + (currentPage - 1) * perPage}</td>
+                        {/* <td>{++index + (currentPage - 1) * perPage}</td> */}
                         <td>{user.name}</td>
                         <td>{user.username}</td>
                         <td>{user.email}</td>
                         <td>
-                          <Button
-                            className="me-3 mb-3"
-                            variant="warning"
-                            onClick={() => {
-                              editHandler(user);
-                            }}
-                          >
-                            <i className="fa-solid fa-pen-to-square fa-2xs"></i>
-                          </Button>
-
-                          <Button
-                            className=" mb-3"
-                            variant="danger"
-                            onClick={() => {
+                          <EditAction onEdit={() => editHandler(user)} />
+                          <DeleteAction
+                            onDelete={() => {
                               deleteHandler(user.id);
                             }}
-                          >
-                            <i className="fa-solid fa-trash fa-2xs"></i>
-                          </Button>
+                          />
                         </td>
                       </tr>
                     ))
@@ -388,8 +369,7 @@ const UsersIndex = () => {
               <>
                 {loading ? (
                   <Button className="w-100" disabled variant="warning">
-                    <Spinner as="span" animation="border" role="status" size="sm" />
-                    <span className="visually-hidden">Loading...</span>
+                    <Loading size="sm" />
                   </Button>
                 ) : (
                   <Button type="submit" className="w-100" variant="warning">
@@ -401,8 +381,7 @@ const UsersIndex = () => {
               <>
                 {loading ? (
                   <Button style={{ background: "#00b4d8" }} className="w-100" disabled>
-                    <Spinner as="span" animation="border" role="status" size="sm" />
-                    <span className="visually-hidden">Loading...</span>
+                    <Loading size="sm" />
                   </Button>
                 ) : (
                   <Button type="submit" style={{ background: "#00b4d8" }} className="w-100">

@@ -40,8 +40,8 @@ function ProjectEdit() {
   const [note, setNote] = useState("");
 
   //form project detail
-  const [projectNameId, setProjectNameId] = useState("");
   const [sequence, setSequence] = useState([]);
+  const [maxSequence, setMaxSequence] = useState([]);
   const [arrProjectStatus, setArrProjectStatus] = useState([]);
   const [arrProjectNote, setArrProjectNote] = useState([]);
   const [arrFile, setArrFile] = useState(Array.from(Array(projectNames.length)));
@@ -128,24 +128,39 @@ function ProjectEdit() {
     });
   };
 
-  const fetchProjectNames = async () => {
-    setLoading(true);
-    await Api.get("api/projectName", {
+  const searchMaxSequence = async (projectNameId, index) => {
+    await Api.get(`api/searchMaxSequence/${projectNameId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNames(response.data.data.data);
+      const updateMaxSequence = response.data.data;
 
-      setLoading(false);
+      const updateMaxSequences = [...maxSequence];
+      updateMaxSequences[index] = updateMaxSequence;
+      setMaxSequence(updateMaxSequences);
     });
   };
 
-  // useEffect(() => {
-  //   fetchProjectByName(name);
+  const fetchProjectNames = async () => {
+    setLoading(true);
+    await Api.get("api/projectList", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      setProjectNames(response.data.data);
+     const max_sequence = response.data.data.map((projectName, index) => {
+       return Math.max(...projectName.project_statuses.map((p) => {
+            return p.project_name_id === projectName.id && p.sequence;
+          
+          }),0);
+      });
 
-  //   console.log(project);
-  // }, [project, name]);
+      setMaxSequence(max_sequence);
+      setLoading(false);
+    });
+  };
 
   const handleChangeFile = (e, index) => {
     const updateFile = e.target.files[0];
@@ -191,10 +206,6 @@ function ProjectEdit() {
     setName(e.target.value);
   };
 
-  // useEffect(() => {
-  //   setStatusProjectDetail(statusProjectDetail);
-  // }, [statusProjectDetail]);
-
   const handleProject = async (projectName, index) => {
     const updateStatus = false;
     setLoading(true);
@@ -237,7 +248,6 @@ function ProjectEdit() {
       const formData = new FormData();
       formData.append("project_id", id);
       formData.append("project_name", name);
-      formData.append("status", status);
       formData.append("note", note);
       formData.append("project_name_id", projectName);
       formData.append("project_status_id", arrProjectStatus[index]);
@@ -262,6 +272,7 @@ function ProjectEdit() {
 
           setProjectId(response.data.data.id);
           searchSequence(arrProjectStatus[index], index);
+          searchMaxSequence(projectName, index);
 
           setLoading(false);
           setValidation({});
@@ -284,34 +295,17 @@ function ProjectEdit() {
           setArrProjectNote(updateProjectNotes);
 
           fetchProjectById();
-
-          // projectNames.map((p, i) => {
-          //   handleProjectDetail(projectName + i, sequence + (i + 1));
-          // });
-
-          // if (statusProjectDetail) {
-          //   toast.success("Saved project detail succesffuly", {
-          //     duration: 4000,
-          //     position: "top-right",
-          //     style: {
-          //       borderRadius: "10px",
-          //       background: "#333",
-          //       color: "#fff",
-          //     },
-          //   });
-          // } else {
-          //   toast.error("Saved project detail failed", {
-          //     duration: 4000,
-          //     position: "top-right",
-          //     style: {
-          //       borderRadius: "10px",
-          //       background: "#333",
-          //       color: "#fff",
-          //     },
-          //   });
-          // }
         })
         .catch((error) => {
+          toast.error("Saved project failed", {
+            duration: 3000,
+            position: "top-right",
+            style: {
+              borderRadius: "10px",
+              background: "#333",
+              color: "#fff",
+            },
+          });
           setLoading(false);
 
           setValidation(error.response.data);
@@ -355,72 +349,7 @@ function ProjectEdit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // const handleChangeCheckedAll = (e) => {
-  //   setIsCheckedAll(isCheckedAll ? false : true);
 
-  //   if (!isCheckedAll) {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = true;
-  //     }
-  //     setCount(temp.length);
-
-  //     setIsChecked(temp);
-  //   } else {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = false;
-  //     }
-  //     setCount(0);
-  //     setIsChecked(temp);
-  //   }
-  // };
-
-  // const handleChangeChecked = (index) => {
-  //   const temp = [...isChecked];
-  //   categories.map((c, i) => {
-  //     if (i === index) {
-  //       temp[i] = isChecked[i] ? false : true;
-  //       if (temp[i]) {
-  //         setCount(count + 1);
-  //       } else {
-  //         setCount(count - 1);
-  //       }
-  //       return setIsChecked(temp);
-  //     } else {
-  //       temp[i] = isChecked[i] ? true : false;
-  //       return setIsChecked(temp);
-  //     }
-  //   });
-
-  //   setIsChecked(temp);
-  // };
-
-  // const test = async (id, projectName) => {
-  //   await Api.delete(`api/deleteProjectDetail/${id},${projectName}`, {
-  //     headers: {
-  //       Authorization: `Bearer ${token}`,
-  //     },
-  //   }).then(() => {
-  //     fetchProjectById();
-  //   });
-  // };
-
-  const downloadFile = async (fileDl) => {
-    // const formData = new FormData();
-    // formData.append("project_id", id);
-    // formData.append("project_name_id", projectName);
-    // formData.append("document_attch", file);
-
-    await Api.get(`api/downloadFile/${fileDl}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    }).then((response) => {
-      fileDownload(response.data, fileDl);
-    });
-  };
 
   return (
     <React.Fragment>
@@ -443,15 +372,6 @@ function ProjectEdit() {
                       {validation.project_name && <Alert variant="danger">{validation.project_name}</Alert>}
 
                       <Form.Control type="hidden" value={id} />
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Status</Form.Label>
-                        <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                          <option value="0">In Progress</option>
-                          <option value="1">Done</option>
-                        </Form.Select>
-                      </Form.Group>
-                      {validation.status && <Alert variant="danger">{validation.status}</Alert>}
 
                       <Form.Group className="mb-3">
                         <Form.Label>Note</Form.Label>
@@ -479,7 +399,7 @@ function ProjectEdit() {
                                 <Form.Group className="mb-3">
                                   <Form.Label>File</Form.Label>
                                   <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
-                                  <Button variant="link" href={arrFile[i]} download disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                  <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined || arrFile[i] !== "-" ? false : true} style={{ textDecoration: "none" }}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button>
 
@@ -518,7 +438,7 @@ function ProjectEdit() {
                           {/* {projectName.project_statuses.map((projectStatus)=>(
                             
                           ))} */}
-                          {projectName.sequence !== 1 && sequence[i - 1] === Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) && (
+                          {projectName.sequence !== 1 && sequence[i - 1] !== undefined && sequence[i - 1] === maxSequence[i - 1] && (
                             <>
                               <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
                                 <Card.Header className="text-white">{projectName.name}</Card.Header>
@@ -540,7 +460,7 @@ function ProjectEdit() {
                                         <Form.Label>File</Form.Label>
                                         <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
 
-                                        <Button variant="link" href={arrFile[i]} download disabled={arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                        <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined || arrFile[i] !== "-" ? false : true} style={{ textDecoration: "none" }}>
                                           <i class="fa-solid fa-download"></i> Download File
                                         </Button>
                                         {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>

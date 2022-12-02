@@ -16,31 +16,28 @@ import PaginationComponent from "../../components/Pagination";
 import toast from "react-hot-toast";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Button, Card, Col, Row, Table, Form, Modal, Alert } from "react-bootstrap";
+import { Button, Card, Col, Row, Table, Form, Modal, Alert, Spinner, Tooltip, OverlayTrigger } from "react-bootstrap";
 import Search from "../../components/Search";
 import Loading from "../../components/Loading";
 import Addbutton from "../../components/Addbutton";
 import EditAction from "../../components/EditAction";
 import DeleteAction from "../../components/DeleteAction";
-import TableHead from "../../components/table/TableHead";
 
 const columns = [
-  { label: "Status", accessor: "status", sortable: true },
-  { label: "Project Name", accessor: "project_name", sortable: true },
-  { label: "Sequence", accessor: "sequence", sortable: false },
+  { label: "Name", accessor: "name", sortable: true },
+  { label: "Sequence", accessor: "sequence", sortable: true },
+  { label: "Required File", accessor: "required_file", sortable: false },
   { label: "Actions", accessor: "actions", sortable: false },
 ];
 
-function ProjectStatusIndex() {
+function ProjectNameIndex() {
   //title page
 
-  document.title = "Project Status";
+  document.title = "Project Name";
 
   //state posts
 
-  const [projectStatuses, setProjectStatuses] = useState([]);
   const [projectNames, setProjectNames] = useState([]);
-  const [projectNameId, setProjectNameId] = useState("");
 
   const [edit, setEdit] = useState({});
 
@@ -60,7 +57,7 @@ function ProjectStatusIndex() {
 
   const [name, setName] = useState("");
   const [sequence, setSequence] = useState("");
-  const [status, setStatus] = useState("");
+  const [requiredFile, setRequiredFile] = useState("0");
 
   const [validation, setValidation] = useState({});
 
@@ -86,7 +83,7 @@ function ProjectStatusIndex() {
 
     //fetching data from Rest API
 
-    await Api.get(`/api/projectStatus?q=${searchQuery}&page=${page}`, {
+    await Api.get(`/api/projectName?page=${page}&q=${searchQuery}`, {
       headers: {
         //header Bearer + Token
 
@@ -95,7 +92,7 @@ function ProjectStatusIndex() {
     }).then((response) => {
       //set data response to state "categories"
 
-      setProjectStatuses(response.data.data.data);
+      setProjectNames(response.data.data.data);
 
       //set currentPage
 
@@ -113,39 +110,12 @@ function ProjectStatusIndex() {
     });
   };
 
-  const fetchProjectName = async () => {
-    await Api.get("/api/projectList", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((response) => {
-      setProjectNames(response.data.data);
-    });
-  };
-
-  function titleCase(str) {
-    var splitStr = str.toLowerCase().split(" ");
-    for (var i = 0; i < splitStr.length; i++) {
-      // You do not need to check if i is larger than splitStr length, as your for does that for you
-      // Assign it back to the array
-      splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
-    }
-    // Directly return the joined string
-    return splitStr.join(" ");
-  }
+  //hook
 
   useEffect(() => {
     //call function "fetchData"
 
     fetchData();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    //call function "fetchData"
-
-    fetchProjectName();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -159,14 +129,13 @@ function ProjectStatusIndex() {
     setShowModal(false);
     setValidation({});
     setName("");
-    setProjectNameId("");
     setSequence("");
-    setStatus("");
+    setRequiredFile("0");
     setEdit({});
     setBlur(0);
   };
 
-  const deleteStatus = (id) => {
+  const deleteProjectName = (id) => {
     confirmAlert({
       customUI: ({ onClose }) => {
         return (
@@ -186,7 +155,7 @@ function ProjectStatusIndex() {
                       className="text-nowrap"
                       variant="danger"
                       onClick={async () => {
-                        await Api.delete(`/api/projectStatus/${id}`, {
+                        await Api.delete(`/api/projectName/${id}`, {
                           headers: {
                             Authorization: `Bearer ${token}`,
                           },
@@ -229,25 +198,25 @@ function ProjectStatusIndex() {
     });
   };
 
-  const storeStatus = async (e) => {
+  const storeProjectName = async (e) => {
     e.preventDefault();
 
     setLoading(true);
     const formData = new FormData();
 
     if (edit.id) {
-      formData.append("project_name_id", projectNameId);
-      formData.append("status", titleCase(status));
-
+      formData.append("name", name);
+      formData.append("sequence", sequence);
+      formData.append("required_file", requiredFile);
       formData.append("_method", "PATCH");
 
-      await Api.post(`/api/projectStatus/${edit.id}`, formData, {
+      await Api.post(`/api/projectName/${edit.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
         .then(() => {
-          toast.success("Update status succefully", {
+          toast.success("Update Project Name succefully", {
             duration: 4000,
             position: "top-right",
             style: {
@@ -266,17 +235,17 @@ function ProjectStatusIndex() {
           setValidation(error.response.data);
         });
     } else {
-      formData.append("project_name_id", projectNameId);
-      formData.append("status", titleCase(status));
+      formData.append("name", name);
       formData.append("sequence", sequence);
+      formData.append("required_file", requiredFile);
 
-      await Api.post("/api/projectStatus", formData, {
+      await Api.post("/api/projectName", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
         .then(() => {
-          toast.success("Saved Project Status succesffuly", {
+          toast.success("Saved categorry succesffuly", {
             duration: 4000,
             position: "top-right",
             style: {
@@ -296,12 +265,11 @@ function ProjectStatusIndex() {
     }
   };
 
-  const editHandler = (projectStatus) => {
-    setEdit(projectStatus);
-    setProjectNameId(projectStatus.project_name_id);
-    setName(projectStatus.project_name_id);
-    setSequence(projectStatus.sequence);
-    setStatus(projectStatus.status);
+  const editHandler = (projectName) => {
+    setEdit(projectName);
+    setName(projectName.name);
+    setSequence(projectName.sequence);
+    setRequiredFile(projectName.required_file);
     handleShowModal();
   };
 
@@ -313,25 +281,37 @@ function ProjectStatusIndex() {
 
   return (
     <React.Fragment>
-      <LayoutAdmin blur={blur}>
+      <LayoutAdmin>
         <Row className=" mt-4" style={{ filter: `blur(${blur}px)` }}>
           <Col xs={12}>
             <Card className=" border-0 rounded shadow-sm">
               <Card.Header>
-                <span className="fw-bold">PROJECT STATUS</span>
+                <span className="fw-bold">PROJECT NAME</span>
               </Card.Header>
 
               <Card.Body>
                 <Row>
                   <Col xs={10}>
-                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name="status name" />
+                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} />
                   </Col>
                   <Col xs={2}>
                     <Addbutton size="md" onClick={handleShowModal} />
                   </Col>
                 </Row>
                 <Table responsive bordered hover>
-                  <TableHead columns={columns} />
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+
+                      <th>Name</th>
+
+                      <th>Sequence</th>
+
+                      <th className="text-nowrap">Required File</th>
+
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
 
                   <tbody>
                     {loading ? (
@@ -340,26 +320,34 @@ function ProjectStatusIndex() {
                           <Loading size="lg" />
                         </td>
                       </tr>
-                    ) : !projectStatuses.length > 0 ? (
+                    ) : !projectNames.length > 0 ? (
                       <tr>
                         <td colSpan={5} className="text-center py-4">
                           Data Not Found
                         </td>
                       </tr>
                     ) : (
-                      projectStatuses.map((projectStatus, index) => (
-                        <tr key={projectStatus.id}>
-                          {/* <td>{++index + (currentPage - 1) * perPage}</td> */}
-
-                          <td>{projectStatus.status}</td>
-                          <td>{projectStatus.project_name.name}</td>
-
-                          <td>{projectStatus.sequence}</td>
+                      projectNames.map((projectName, index) => (
+                        <tr key={projectName.id}>
+                          <td>{++index + (currentPage - 1) * perPage}</td>
+                          <td>{projectName.name}</td>
+                          <td>{projectName.sequence}</td>
+                          <td>{projectName.required_file === "0" ? "No" : "Yes"}</td>
                           <td>
-                            <EditAction onEdit={() => editHandler(projectStatus)} />
+                            <OverlayTrigger
+                              placement="right"
+                              overlay={
+                                <Tooltip id={`Edit`}>
+                                  Tooltip on <strong>Edit</strong>.
+                                </Tooltip>
+                              }
+                            >
+                              <EditAction onEdit={() => editHandler(projectName)} />
+                            </OverlayTrigger>
+                            
                             <DeleteAction
                               onDelete={() => {
-                                deleteStatus(projectStatus.id);
+                                deleteProjectName(projectName.id);
                               }}
                             />
                           </td>
@@ -380,52 +368,38 @@ function ProjectStatusIndex() {
 
         <Modal show={showModal} onHide={handleCloseModal} backdrop="static">
           <Modal.Header closeButton>
-            <Modal.Title>{edit.id ? "Edit Status" : "Create Status"}</Modal.Title>
+            <Modal.Title>{edit.id ? "Edit Project" : "Create Project"}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={storeStatus}>
+            <Form onSubmit={storeProjectName}>
               <Form.Group className="mb-3">
-                <Form.Label>Project Name</Form.Label>
-                <Form.Select value={projectNameId} onChange={(e) => setProjectNameId(e.target.value)}>
-                  <option value="">-- Select project --</option>
-                  {projectNames.map((projectName) => (
-                    <option key={projectName.id} value={projectName.id}>
-                      {projectName.name}
-                    </option>
-                  ))}
-                </Form.Select>
+                <Form.Label>Name</Form.Label>
+                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} />
               </Form.Group>
-              {validation.project_name_id && <Alert variant="danger">{validation.project_name_id}</Alert>}
+              {validation.name && <Alert variant="danger">{validation.name}</Alert>}
 
               <Form.Group className="mb-3">
-                <Form.Label>Status</Form.Label>
-                <Form.Control type="text" value={status} onChange={(e) => setStatus(titleCase(e.target.value))} />
+                <Form.Label>Sequence</Form.Label>
+                <Form.Control type="text" value={sequence} onChange={(e) => setSequence(e.target.value)} />
               </Form.Group>
-              {validation.status && (
+              {validation.sequence && (
                 <Alert variant="danger" className="mb-3">
-                  {validation.status}
+                  {validation.sequence}
                 </Alert>
               )}
 
-              {!edit.id && (
-                <>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Sequence</Form.Label>
-                    <Form.Control type="number" value={sequence} onChange={(e) => setSequence(e.target.value)} />
-                  </Form.Group>
-                  {validation.sequence && (
-                    <Alert variant="danger" className="mb-3">
-                      {validation.sequence}
-                    </Alert>
-                  )}
-                </>
-              )}
-              {validation.errors && (
+              <Form.Group className="mb-3">
+                <Form.Label>Required File</Form.Label>
+                <br />
+
+                <Form.Check name="requiredFile" inline type="radio" label="no" value="0" onChange={(e) => setRequiredFile(e.target.value)} checked={requiredFile === "0" && true} />
+                <Form.Check name="requiredFile" inline type="radio" label="yes" value="1" onChange={(e) => setRequiredFile(e.target.value)} checked={requiredFile === "1" && true} />
+              </Form.Group>
+              {validation.required_file && (
                 <Alert variant="danger" className="mb-3">
-                  {validation.errors}
+                  {validation.required_file}
                 </Alert>
               )}
-
               {edit.id ? (
                 <>
                   {loading ? (
@@ -460,4 +434,4 @@ function ProjectStatusIndex() {
   );
 }
 
-export default ProjectStatusIndex;
+export default ProjectNameIndex;

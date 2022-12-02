@@ -16,7 +16,12 @@ import PaginationComponent from "../../components/Pagination";
 import toast from "react-hot-toast";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Button, Card, Col, Row, Table, Form, Modal, Alert, Spinner } from "react-bootstrap";
+import { Button, Card, Col, Row, Table, Form, Modal, Alert } from "react-bootstrap";
+import Search from "../../components/Search";
+import Loading from "../../components/Loading";
+import Addbutton from "../../components/Addbutton";
+import EditAction from "../../components/EditAction";
+import DeleteAction from "../../components/DeleteAction";
 
 function ProjectNameIndex() {
   //title page
@@ -26,6 +31,8 @@ function ProjectNameIndex() {
   //state posts
 
   const [projectNames, setProjectNames] = useState([]);
+
+  const [sortType, setSortType] = useState("desc");
 
   const [edit, setEdit] = useState({});
 
@@ -98,15 +105,42 @@ function ProjectNameIndex() {
     });
   };
 
+  const sortedData = (projectNames) => {
+    let result;
+
+    if (sortType === "desc") {
+      result = [...projectNames].sort((a, b) => {
+        return b.sequence.toString().localeCompare(a.sequence.toString(), "en", {
+          numeric: true,
+        });
+      });
+    } else if (sortType === "asc") {
+      result = [...projectNames].sort((a, b) => {
+        return a.sequence.toString().localeCompare(b.sequence.toString(), "en", {
+          numeric: true,
+        });
+      });
+    } else {
+      return projectNames;
+    }
+
+    setProjectNames(result);
+  };
+
   //hook
 
   useEffect(() => {
-    //call function "fetchData"
-
     fetchData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // and on sortType change you can handle it like this:
+  useEffect(() => {
+    sortedData(projectNames);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortType]);
 
   const handleShowModal = () => {
     setShowModal(true);
@@ -194,7 +228,6 @@ function ProjectNameIndex() {
 
     if (edit.id) {
       formData.append("name", name);
-      formData.append("sequence", sequence);
       formData.append("required_file", requiredFile);
       formData.append("_method", "PATCH");
 
@@ -222,35 +255,35 @@ function ProjectNameIndex() {
           setLoading(false);
           setValidation(error.response.data);
         });
-    }
+    } else {
+      formData.append("name", name);
+      formData.append("sequence", sequence);
+      formData.append("required_file", requiredFile);
 
-    formData.append("name", name);
-    formData.append("sequence", sequence);
-    formData.append("required_file", requiredFile);
-
-    await Api.post("/api/projectName", formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(() => {
-        toast.success("Saved categorry succesffuly", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        });
-        setLoading(false);
-        fetchData();
-        handleCloseModal();
+      await Api.post("/api/projectName", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
-      .catch((error) => {
-        setLoading(false);
-        setValidation(error.response.data);
-      });
+        .then(() => {
+          toast.success("Saved categorry succesffuly", {
+            duration: 4000,
+            position: "top-right",
+            style: {
+              borderRadius: "10px",
+              background: "#333",
+              color: "#fff",
+            },
+          });
+          setLoading(false);
+          fetchData();
+          handleCloseModal();
+        })
+        .catch((error) => {
+          setLoading(false);
+          setValidation(error.response.data);
+        });
+    }
   };
 
   const editHandler = (projectName) => {
@@ -261,47 +294,7 @@ function ProjectNameIndex() {
     handleShowModal();
   };
 
-  // const handleChangeCheckedAll = (e) => {
-  //   setIsCheckedAll(isCheckedAll ? false : true);
-
-  //   if (!isCheckedAll) {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = true;
-  //     }
-  //     setCount(temp.length);
-
-  //     setIsChecked(temp);
-  //   } else {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = false;
-  //     }
-  //     setCount(0);
-  //     setIsChecked(temp);
-  //   }
-  // };
-
-  // const handleChangeChecked = (index) => {
-  //   const temp = [...isChecked];
-  //   categories.map((c, i) => {
-  //     if (i === index) {
-  //       temp[i] = isChecked[i] ? false : true;
-  //       if (temp[i]) {
-  //         setCount(count + 1);
-  //       } else {
-  //         setCount(count - 1);
-  //       }
-  //       return setIsChecked(temp);
-  //     } else {
-  //       temp[i] = isChecked[i] ? true : false;
-  //       return setIsChecked(temp);
-  //     }
-  //   });
-
-  //   setIsChecked(temp);
-  // };
-  const searchHandlder = (e) => {
+  const searchHandler = (e) => {
     e.preventDefault();
 
     fetchData(1, q);
@@ -309,7 +302,7 @@ function ProjectNameIndex() {
 
   return (
     <React.Fragment>
-      <LayoutAdmin>
+      <LayoutAdmin blur={blur}>
         <Row className=" mt-4" style={{ filter: `blur(${blur}px)` }}>
           <Col xs={12}>
             <Card className=" border-0 rounded shadow-sm">
@@ -320,33 +313,19 @@ function ProjectNameIndex() {
               <Card.Body>
                 <Row>
                   <Col xs={10}>
-                    <form onSubmit={searchHandlder} className="form-group">
-                      <div className="input-group mb-3">
-                        <input type="text" className="form-control" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search by name" />
-                        <button type="submit" className="btn btn-md btn-success">
-                          <i className="fa fa-search"></i> SEARCH
-                        </button>
-                      </div>
-                    </form>
+                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name='name'/>
                   </Col>
                   <Col xs={2}>
-                    <Button className="rounded-circle float-end" size="md" style={{ background: "#06d6a0" }} onClick={handleShowModal}>
-                      <i className="fa-solid fa-plus fa-sm"></i>
-                    </Button>
+                    <Addbutton size="md" onClick={handleShowModal} display='none' />
                   </Col>
                 </Row>
-                <Table responsive bordered hover>
-                  <thead>
+                <Table className="table" responsive bordered hover>
+                  <thead style={{ backgroundColor: '#569cb8' }} className="text-white">
                     <tr>
-                      <th>No.</th>
-
-                      <th>Name</th>
-
-                      <th>Sequence</th>
-
+                      <th className="text-nowrap">Name</th>
+                      <th className="text-nowrap">Sequence</th>
                       <th className="text-nowrap">Required File</th>
-
-                      <th>Actions</th>
+                      <th className="text-nowrap">Actions</th>
                     </tr>
                   </thead>
 
@@ -354,8 +333,7 @@ function ProjectNameIndex() {
                     {loading ? (
                       <tr>
                         <td colSpan={5} className="text-center py-4">
-                          <Spinner animation="border" size="lg" role="status" />
-                          <span className="visually-hidden">...loading</span>
+                          <Loading size="lg" />
                         </td>
                       </tr>
                     ) : !projectNames.length > 0 ? (
@@ -365,35 +343,24 @@ function ProjectNameIndex() {
                         </td>
                       </tr>
                     ) : (
-                      projectNames.map((projectName, index) => (
-                        <tr key={projectName.id}>
-                          <td>{++index + (currentPage - 1) * perPage}</td>
-                          <td>{projectName.name}</td>
-                          <td>{projectName.sequence}</td>
-                          <td>{projectName.required_file === "0" ? "No" : "Yes"}</td>
-                          <td>
-                            <Button
-                              className="me-3 mb-3"
-                              variant="warning"
-                              onClick={() => {
-                                editHandler(projectName);
-                              }}
-                            >
-                              <i className="fa-solid fa-pen-to-square fa-2xs"></i>
-                            </Button>
-
-                            <Button
-                              className=" mb-3"
-                              variant="danger"
-                              onClick={() => {
-                                deleteProjectName(projectName.id);
-                              }}
-                            >
-                              <i className="fa-solid fa-trash fa-2xs"></i>
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
+                      projectNames.map((data) => {
+                        return (
+                          <tr key={data.id}>
+                            <td>{data.name}</td>
+                            <td>{data.sequence}</td>
+                            <td>{data.required_file === "0" ? "No" : "Yes"}</td>
+                            <td>
+                              <EditAction onEdit={() => editHandler(data)} />
+                              <DeleteAction
+                                onDelete={() => {
+                                  deleteProjectName(data.id);
+                                }}
+                                display = "none"
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </Table>
@@ -419,14 +386,18 @@ function ProjectNameIndex() {
               </Form.Group>
               {validation.name && <Alert variant="danger">{validation.name}</Alert>}
 
-              <Form.Group className="mb-3">
-                <Form.Label>Sequence</Form.Label>
-                <Form.Control type="text" value={sequence} onChange={(e) => setSequence(e.target.value)} />
-              </Form.Group>
-              {validation.sequence && (
-                <Alert variant="danger" className="mb-3">
-                  {validation.sequence}
-                </Alert>
+              {!edit.id && (
+                <>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Sequence</Form.Label>
+                    <Form.Control type="text" value={sequence} onChange={(e) => setSequence(e.target.value)} />
+                  </Form.Group>
+                  {validation.sequence && (
+                    <Alert variant="danger" className="mb-3">
+                      {validation.sequence}
+                    </Alert>
+                  )}
+                </>
               )}
 
               <Form.Group className="mb-3">
@@ -445,8 +416,7 @@ function ProjectNameIndex() {
                 <>
                   {loading ? (
                     <Button className="w-100" disabled variant="warning">
-                      <Spinner as="span" animation="border" role="status" size="sm" />
-                      <span className="visually-hidden">Loading...</span>
+                      <Loading size="sm" />
                     </Button>
                   ) : (
                     <Button type="submit" className="w-100" variant="warning">
@@ -458,8 +428,7 @@ function ProjectNameIndex() {
                 <>
                   {loading ? (
                     <Button style={{ background: "#00b4d8" }} className="w-100" disabled>
-                      <Spinner as="span" animation="border" role="status" size="sm" />
-                      <span className="visually-hidden">Loading...</span>
+                      <Loading size="sm" />
                     </Button>
                   ) : (
                     <Button type="submit" style={{ background: "#00b4d8" }} className="w-100">

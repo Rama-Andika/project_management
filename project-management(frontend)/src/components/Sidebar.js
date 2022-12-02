@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 
@@ -12,7 +11,7 @@ const SidebarComponent = () => {
 
   return (
     <div className="list-group list-group-flush ">
-      <Sidebar>
+      <Sidebar >
         <Menu>
           <MenuItem routerLink={<Link to="/project" />} active={splitLocation[1] === "project" ? true : false}>
             Project

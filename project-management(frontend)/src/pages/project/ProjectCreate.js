@@ -14,7 +14,7 @@ import Api from "../../api";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Form, Alert, Col, Card, Row, Button } from "react-bootstrap";
+import { Form, Alert, Col, Card, Row, Button, ProgressBar } from "react-bootstrap";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import fileDownload from "js-file-download";
@@ -28,15 +28,17 @@ function ProjectCreate() {
 
   const [projectNames, setProjectNames] = useState([]);
   const [arrStatusProject, setArrStatusProject] = useState(Array.from(Array(projectNames.length)));
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   //form project
   const [name, setName] = useState("");
   const [id, setId] = useState(0);
   const [note, setNote] = useState("");
-  const [status, setStatus] = useState("0");
+  const [status, setStatus] = useState("");
 
   //form project detail
   const [sequence, setSequence] = useState([]);
+  const [maxSequence, setMaxSequence] = useState([]);
   const [arrProjectStatus, setArrProjectStatus] = useState(Array.from(Array(projectNames.length)));
   const [arrFile, setArrFile] = useState(Array.from(Array(projectNames.length)));
   const [arrProjectNote, setArrProjectNote] = useState(Array.from(Array(projectNames.length)));
@@ -53,14 +55,16 @@ function ProjectCreate() {
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+
+
   const fetchProjectNames = async () => {
     setLoading(true);
-    await Api.get("api/projectName", {
+    await Api.get("api/projectList", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNames(response.data.data.data);
+      setProjectNames(response.data.data);
 
       setLoading(false);
     });
@@ -95,28 +99,31 @@ function ProjectCreate() {
         return (updateProjectSequences[i] = updateProjectSequence);
       });
 
-      const fileList = response.data.data.project_details.map((projectDetail, i) => {
-        const updateProjectFile = projectDetail.document_attch;
-        const updateProjectFiles = [...arrFile];
-        return (updateProjectFiles[i] = updateProjectFile);
-      });
+      // const maxSequenceList = response.data.data.project_details.map((projectDetail, i) => {
+      //   const updateMaxSequence = response.data.data;
+
+      //   const updateMaxSequences = [...maxSequence];
+      //   updateMaxSequences[i] = updateMaxSequence;
+      //   setMaxSequence(updateMaxSequences);
+      // });
+
+      // const fileList = response.data.data.project_details.map((projectDetail, i) => {
+      //   const updateProjectFile = projectDetail.document_attch;
+      //   const updateProjectFiles = [...arrFile];
+      //   return (updateProjectFiles[i] = updateProjectFile);
+      // });
 
       setArrProjectStatus(statusList);
       setArrProjectNote(noteList);
       setSequence(sequenceList);
-      setArrFile(fileList);
+      // setArrFile(fileList);
 
       setLoading(false);
     });
   };
 
-  // useEffect(() => {
-  //   fetchProjectByName(name);
-
-  //   console.log(project);
-  // }, [project, name]);
-
   const handleChangeFile = (e, index) => {
+    setUploadProgress(0)
     const updateFile = e.target.files[0];
 
     const updateFiles = [...arrFile];
@@ -148,19 +155,7 @@ function ProjectCreate() {
 
   const handleChangeName = (e) => {
     setName(e.target.value);
-    // const updateStatus = false;
-
-    // const updateStatuses = [...arrStatusProject];
-    // for (let index = 0; index < projectNames.length; index++) {
-    //   updateStatuses[index] = updateStatus;
-    // }
-
-    // setArrStatusProject(updateStatuses);
   };
-
-  // useEffect(() => {
-  //   setStatusProjectDetail(statusProjectDetail);
-  // }, [statusProjectDetail]);
 
   const searchSequence = async (projectStatusId, index) => {
     await Api.get(`api/searchSequence/${projectStatusId}`, {
@@ -176,9 +171,24 @@ function ProjectCreate() {
     });
   };
 
+  const searchMaxSequence = async (projectNameId, index) => {
+    await Api.get(`api/searchMaxSequence/${projectNameId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      const updateMaxSequence = response.data.data;
+
+      const updateMaxSequences = [...maxSequence];
+      updateMaxSequences[index] = updateMaxSequence;
+      setMaxSequence(updateMaxSequences);
+    });
+  };
+
   const handleProject = async (projectName, index) => {
     const updateStatus = false;
     setLoading(true);
+    setUploadProgress(0)
 
     const updateStatuses = [...arrStatusProject];
     updateStatuses[index] = updateStatus;
@@ -218,7 +228,6 @@ function ProjectCreate() {
       const formData = new FormData();
       formData.append("project_id", id);
       formData.append("project_name", name);
-      formData.append("status", status);
       formData.append("note", note);
       formData.append("project_name_id", projectName);
       formData.append("project_status_id", arrProjectStatus[index]);
@@ -228,6 +237,11 @@ function ProjectCreate() {
       await Api.post("/api/project/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+        },
+    
+        onUploadProgress: (event) => {
+          //Set the progress value to show the progress bar
+          setUploadProgress(Math.round((100 * event.loaded) / event.total));
         },
       })
         .then((response) => {
@@ -243,6 +257,8 @@ function ProjectCreate() {
 
           setId(response.data.data.id);
           searchSequence(arrProjectStatus[index], index);
+          searchMaxSequence(projectName, index);
+
           // searchProject(projectName)
 
           setLoading(false);
@@ -265,6 +281,13 @@ function ProjectCreate() {
           const updateProjectNotes = [...arrProjectNote];
           updateProjectNotes[index] = updateProjectNote;
           setArrProjectNote(updateProjectNotes);
+
+          // const updateProjectFile = arrFile[index];
+          // const updateProjectFiles = [...arrFile];
+          // updateProjectFiles[index] = updateProjectFile;
+
+          // setArrFile(updateProjectFiles);
+
           fetchProjectById();
 
           // projectNames.map((p, i) => {
@@ -294,8 +317,17 @@ function ProjectCreate() {
           // }
         })
         .catch((error) => {
+          toast.error("Saved project failed", {
+            duration: 3000,
+            position: "top-right",
+            style: {
+              borderRadius: "10px",
+              background: "#333",
+              color: "#fff",
+            },
+          });
           setLoading(false);
-
+          setUploadProgress(0)
           setValidation(error.response.data);
         });
     }
@@ -321,18 +353,15 @@ function ProjectCreate() {
   };
 
   const downloadFile = async (fileDl) => {
-    // const formData = new FormData();
-    // formData.append("project_id", id);
-    // formData.append("project_name_id", projectName);
-    // formData.append("document_attch", file);
+    let download = require("downloadjs");
 
     await Api.get(`api/downloadFile/${fileDl}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       responseType: "blob",
-    }).then((response) => {
-      fileDownload(response.data, fileDl);
+    }).then((res) => {
+      download(res.data, fileDl);
     });
   };
 
@@ -343,53 +372,6 @@ function ProjectCreate() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    //call function "fetchData"
-    //projectName.sequence === 1 || Math.max(...projectName.project_details.map((projectDetail) => projectDetail.sequence))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // const handleChangeCheckedAll = (e) => {
-  //   setIsCheckedAll(isCheckedAll ? false : true);
-
-  //   if (!isCheckedAll) {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = true;
-  //     }
-  //     setCount(temp.length);
-
-  //     setIsChecked(temp);
-  //   } else {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = false;
-  //     }
-  //     setCount(0);
-  //     setIsChecked(temp);
-  //   }
-  // };
-
-  // const handleChangeChecked = (index) => {
-  //   const temp = [...isChecked];
-  //   categories.map((c, i) => {
-  //     if (i === index) {
-  //       temp[i] = isChecked[i] ? false : true;
-  //       if (temp[i]) {
-  //         setCount(count + 1);
-  //       } else {
-  //         setCount(count - 1);
-  //       }
-  //       return setIsChecked(temp);
-  //     } else {
-  //       temp[i] = isChecked[i] ? true : false;
-  //       return setIsChecked(temp);
-  //     }
-  //   });
-
-  //   setIsChecked(temp);
-  // };
 
   return (
     <React.Fragment>
@@ -445,6 +427,8 @@ function ProjectCreate() {
                                   <Button variant="link" className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button>
+
+                                  {/* <ProgressBar now={uploadProgress} label={`${uploadProgress}%`} animated /> */}
                                   {/* <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button> */}
@@ -475,11 +459,12 @@ function ProjectCreate() {
 
                       {projectNames.map((projectName, i) => (
                         <>
+                          {/* <Form.Control type="hidden" value={i+1} /> */}
                           {/* <Form.Control type="hidden" value={++i} /> */}
                           {/* {projectName.project_statuses.map((projectStatus)=>(
-                            
+                          
                           ))} */}
-                          {projectName.sequence !== 1 && sequence[i - 1] === Math.max(...projectName.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName.id && projectStatus.sequence), 0) && (
+                          {projectName.sequence !== 1 && sequence[i - 1] !== undefined && sequence[i - 1] === maxSequence[i - 1] && (
                             <>
                               <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
                                 <Card.Header className="text-white">{projectName.name}</Card.Header>
@@ -502,12 +487,12 @@ function ProjectCreate() {
                                       <Form.Group className="mb-3">
                                         <Form.Label>File</Form.Label>
                                         <Form.Control type="file" onChange={(e) => handleChangeFile(e, i)} />
-                                        {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
-                                          <i class="fa-solid fa-download"></i> Download File
-                                        </Button> */}
-                                        <Button variant="link" href={arrFile[i]} download disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                        <Button variant="link" className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
                                           <i class="fa-solid fa-download"></i> Download File
                                         </Button>
+                                        {/* <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
+                                          <i class="fa-solid fa-download"></i> Download File
+                                        </Button> */}
                                       </Form.Group>
                                       {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                                     </>

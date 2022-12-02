@@ -133,46 +133,6 @@ function ProjectIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // const handleChangeCheckedAll = (e) => {
-  //   setIsCheckedAll(isCheckedAll ? false : true);
-
-  //   if (!isCheckedAll) {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = true;
-  //     }
-  //     setCount(temp.length);
-
-  //     setIsChecked(temp);
-  //   } else {
-  //     const temp = [...isChecked];
-  //     for (let i = 0; i < categories.length; i++) {
-  //       temp[i] = false;
-  //     }
-  //     setCount(0);
-  //     setIsChecked(temp);
-  //   }
-  // };
-
-  // const handleChangeChecked = (index) => {
-  //   const temp = [...isChecked];
-  //   categories.map((c, i) => {
-  //     if (i === index) {
-  //       temp[i] = isChecked[i] ? false : true;
-  //       if (temp[i]) {
-  //         setCount(count + 1);
-  //       } else {
-  //         setCount(count - 1);
-  //       }
-  //       return setIsChecked(temp);
-  //     } else {
-  //       temp[i] = isChecked[i] ? true : false;
-  //       return setIsChecked(temp);
-  //     }
-  //   });
-
-  //   setIsChecked(temp);
-  // };
   const searchHandler = (e) => {
     e.preventDefault();
 
@@ -249,11 +209,12 @@ function ProjectIndex() {
               <Card.Body>
                 <Row>
                   <Col xs={12} className="mb-4">
+                  <p><strong>Search Parameter :</strong></p>
                     <Form onSubmit={searchHandler}>
                       <Form.Group className="mb-3" controlId="formBasicStatus">
                         <Form.Label>Project Status</Form.Label>
                         <Form.Select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: "50%" }}>
-                          <option value="-1">-- All --</option>
+                          <option value="-1">All</option>
                           <option value="0">In Progress</option>
                           <option value="1">Done</option>
                         </Form.Select>
@@ -261,7 +222,7 @@ function ProjectIndex() {
                       <Form.Group className="mb-3" controlId="formBasicNumber">
                         <Form.Label>Number</Form.Label>
                         <Form.Select value={number} onChange={(e) => setNumber(e.target.value)} style={{ width: "50%" }}>
-                          <option value="PRJ">-- All Number --</option>
+                          <option value="PRJ">All Number</option>
                           {projectNumbers.map((projectNumber) => (
                             <option key={projectNumber.id} value={projectNumber.number}>{projectNumber.number}</option>
                           ))}
@@ -305,11 +266,13 @@ function ProjectIndex() {
                   </Col>
                 </Row>
                 <Table responsive bordered hover>
-                  <thead>
+                  <thead style={{ backgroundColor: '#569cb8' }} className="text-white">
                     <tr>
+                      <th>No</th>
+
                       <th>Action</th>
                       
-                      <th>No</th>
+                      <th>Status</th>
 
                       <th>Number</th>
 
@@ -326,7 +289,7 @@ function ProjectIndex() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={5 + projectNames.length} className="text-center py-4">
+                        <td colSpan={6 + projectNames.length} className="text-center py-4">
                           <Spinner animation="border" size="lg" role="status" />
                           <span className="visually-hidden">...loading</span>
                         </td>
@@ -335,19 +298,27 @@ function ProjectIndex() {
                       <>
                         {!projects.length > 0 ? (
                           <tr>
-                            <td colSpan={5 + projectNames.length} className="text-center py-4">
+                            <td colSpan={6 + projectNames.length} className="text-center py-4">
                               Data Not Found
                             </td>
                           </tr>
                         ) : (
                           projects.map((project, index) => (
                             <tr key={project.id}>
+                            <td className="text-center">{++index + (currentPage - 1) * perPage}</td>
                               <td className="text-center">
                                 <Button size="sm" className=" mb-3" variant="danger" onClick={() => deleteProject(project.id)}>
                                   <i className="fa-solid fa-trash fa-2xs"></i>
                                 </Button>
                               </td>
-                              <td>{++index + (currentPage - 1) * perPage}</td>
+                              <td className="text-center">
+                              {project.status === 1 ? (
+                                <i className="fa-solid fa-check" style={{ color: 'green' }}></i>
+                              ) : (
+                                <i className="fa-solid fa-xmark" style={{ color: 'red' }}></i>
+                              )}
+                              
+                              </td>
                               {/* <Link to={`/projectEdit/${project.id}`}>
                                 <td className="text-nowrap">{project.number}</td>
                               </Link> */}

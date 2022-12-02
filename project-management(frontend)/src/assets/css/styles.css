@@ -1,7 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
 
-html, body {
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
@@ -569,9 +570,45 @@ footer {
   width: auto;
 }
 
+.login-card{
+  height: 100vh;
+  background-color: white;
+}
+
+.form-login{
+  padding: 0 50px;
+}
+
 @media only screen and (max-width: 437px){
   .form-width{
     width: 100%;
+  }
+}
+
+@media only screen and (min-width: 1234px){
+  .form-login{
+    padding: 0 50px;
+  }
+}
+
+
+@media only screen and (max-width: 768px){
+  .login-card{
+    background-color: white;
+    padding-top: 50px
+  }
+  .login-form{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .imgLogin{
+    position: relative
+  }
+
+  .form-login{
+    padding: 0 50px;
   }
 }
 
@@ -586,4 +623,12 @@ footer {
 .bOQEtf{
   width: 15rem !important;
   min-width: 15rem !important;
+}
+
+.Ffgmy {
+  position: relative;
+  border-right: 1px solid rgb(239, 239, 239);
+  width: auto !important;
+  min-width: auto !important;
+  transition: width 0s ease 0s, left 0s ease 0s, right 0s ease 0s, all 300ms ease 0s;
 }

@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 
 
-
 class ProjectNameController extends Controller
 {
     /**
@@ -23,7 +22,18 @@ class ProjectNameController extends Controller
 
         $projectName = ProjectName::with('projectStatuses.projectDetail.projectStatus')->when(request()->q, function ($projectName) {
             $projectName = $projectName->where('name', 'like', '%' . request()->q . '%');
-        })->orderBy('sequence')->paginate(5);
+        })->orderBy('sequence')->paginate(10);
+
+        //return with Api Resource
+        return new ProjectNameResource(true, 'List Data Project Name', $projectName);
+    }
+
+    public function sortProject($nameDirect)
+    {
+
+        $projectName = ProjectName::with('projectStatuses.projectDetail.projectStatus')->when(request()->q, function ($projectName) {
+            $projectName = $projectName->where('name', 'like', '%' . request()->q . '%');
+        })->orderBy('sequence',$nameDirect)->paginate(5);
 
         //return with Api Resource
         return new ProjectNameResource(true, 'List Data Project Name', $projectName);
@@ -152,7 +162,6 @@ class ProjectNameController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:project_names,name,' . $projectName->id,
-            'sequence' => 'required|integer|unique:project_names,sequence,' . $projectName->id,
             'required_file' => 'required|boolean',
         ]);
 
@@ -160,10 +169,11 @@ class ProjectNameController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $sequence = ProjectName::whereId($projectName->id)->first()->sequence;
         //update projectName withour image
         $projectName->update([
             'name' => $request->name,
-            'sequence' => $request->sequence,
+            'sequence' => $sequence,
             'required_file' => $request->required_file,
         ]);
 
@@ -182,6 +192,7 @@ class ProjectNameController extends Controller
      */
     public function destroy(ProjectName $projectName)
     {
+      
         if ($projectName->delete()) {
             return new ProjectNameResource(true, 'Data project Name berhasil di hapus', null);
         }

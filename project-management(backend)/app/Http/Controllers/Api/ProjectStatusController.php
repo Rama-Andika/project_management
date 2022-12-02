@@ -21,8 +21,15 @@ class ProjectStatusController extends Controller
     {
         $projectStatus = ProjectStatus::with('projectName')->when(request()->q, function ($projectStatus) {
             $projectStatus = $projectStatus->where('status', 'like', '%' . request()->q . '%');
-        })->orderBy('project_name_id')->orderBy('sequence')->paginate(5);
+        })->orderBy('project_name_id')->orderBy('sequence')->paginate(10);
 
+
+        // ProjectStatus::join('project_names','project_names.id','=','project_statuses.project_name_id')->when(request()->q, function ($projectStatus) {
+        //     $projectStatus = $projectStatus->where('status', 'like', '%' . request()->q . '%');
+        // })->orderBy('project_name_id')->orderBy('project_statuses.sequence')->paginate(5);
+
+
+        
         // ProjectStatus::where('project_name_id','=',"7")->pluck('id');
         // $arrStatus = Array($projectStatus);
         // if(count($projectStatus) > 0){
@@ -38,8 +45,17 @@ class ProjectStatusController extends Controller
         return new ProjectStatusResource(true, 'List Data Project Status', $projectStatus);
     }
 
-    public function searchMaxSequence ($id){
+    public function searchSequence($id)
+    {
         $sequence = ProjectStatus::whereId($id)->value('sequence');
+
+        //return with Api Resource
+        return new ProjectStatusResource(true, 'Sequence', $sequence);
+    }
+
+    public function searchMaxSequence($project_name_id)
+    {
+        $sequence = ProjectStatus::whereRaw('project_name_id = "'.$project_name_id. '"')->max('sequence');
 
         //return with Api Resource
         return new ProjectStatusResource(true, 'Sequence', $sequence);
@@ -63,10 +79,18 @@ class ProjectStatusController extends Controller
      */
     public function store(Request $request)
     {
-        $last_status = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status = "' . $request->status . '"')->value('id');
-        if ($last_status != null) {
+        $checked_status = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status = "' . $request->status . '"')->value('id');
+        $sequenceList = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status NOT LIKE "' . $request->status . '"')->pluck('sequence');
+
+        if ($checked_status != null) {
+            
             return response()->json(['errors' => "Data already exists"], 422);
         } else {
+            foreach ($sequenceList as $sequence) {
+                if ($request->sequence == $sequence) {
+                    return response()->json(['errors' => "Data already exists"], 422);
+                }
+            }
             $validator = Validator::make($request->all(), [
 
                 'project_name_id'  => 'required',
@@ -161,48 +185,63 @@ class ProjectStatusController extends Controller
      */
     public function update(Request $request, ProjectStatus $projectStatus)
     {
-        $last_status = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status = "' . $request->status . '"')->value('id');
-
+        $last_status = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status = "' . $request->status . '"')->first();
+        $sequenceList = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status NOT LIKE "' . $request->status . '"')->pluck('sequence');
         if ($last_status != null) {
-            if ($projectStatus->id == $last_status) {
-                //$last_sequence = ProjectStatus::whereId($projectStatus->id)->first()->sequence;
-                //update projectStatus withour image
+            if ($projectStatus->id == $last_status->id) {
+                foreach ($sequenceList as $sequence) {
+                    if ($request->sequence == $sequence) {
+                        return response()->json(['errors' => "Data already exists"], 422);
+                    }
+                }
+
+                $sequence = ProjectStatus::whereId($projectStatus->id)->first()->sequence;
                 $projectStatus->update([
                     'project_name_id' => $request->project_name_id,
                     'status' => $request->status,
-                    'sequence' => $request->sequence,
+                    'sequence' => $sequence,
                 ]);
 
                 if ($projectStatus) {
                     return new ProjectStatusResource(true, 'Data project Status berhasil di update', $projectStatus); # code...
+                } else {
+                    return new ProjectStatusResource(false, 'Data project Status gagal di update', null);
                 }
 
-                return new ProjectStatusResource(false, 'Data project Status gagal di update', null);
+                //$last_sequence = ProjectStatus::whereId($projectStatus->id)->first()->sequence;
+                //update projectStatus withour image
+
+
+
+            } else {
+                return response()->json(['errors' => "Data already exists"], 422);
             }
-            return response()->json(['errors' => "Data already exists"], 422);
+        } else {
+            $validator = Validator::make($request->all(), [
+                'project_name_id' => 'required',
+                'status' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $sequence = ProjectStatus::whereId($projectStatus->id)->first()->sequence;
+
+            //update projectStatus withour image
+            //$last_sequence = ProjectStatus::whereId($projectStatus->id)->first()->sequence;
+            $projectStatus->update([
+                'project_name_id' => $request->project_name_id,
+                'status' => $request->status,
+                'sequence' => $sequence,
+            ]);
+
+            if ($projectStatus) {
+                return new ProjectStatusResource(true, 'Data project Status berhasil di update', $projectStatus); # code...
+            }
+
+            return new ProjectStatusResource(false, 'Data project Status gagal di update', null);
         }
-        $validator = Validator::make($request->all(), [
-            'project_name_id' => 'required',
-            'status' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        //update projectStatus withour image
-        //$last_sequence = ProjectStatus::whereId($projectStatus->id)->first()->sequence;
-        $projectStatus->update([
-            'project_name_id' => $request->project_name_id,
-            'status' => $request->status,
-            'sequence' => $request->sequence,
-        ]);
-
-        if ($projectStatus) {
-            return new ProjectStatusResource(true, 'Data project Status berhasil di update', $projectStatus); # code...
-        }
-
-        return new ProjectStatusResource(false, 'Data project Status gagal di update', null);
     }
 
     /**

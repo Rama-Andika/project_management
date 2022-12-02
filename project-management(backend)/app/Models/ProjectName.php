@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Haruncpi\LaravelIdGenerator\IdGenerator;
+
 
 class ProjectName extends Model
 {
@@ -14,6 +14,7 @@ class ProjectName extends Model
   protected $fillable = [
      'name', 'sequence', 'required_file'
   ];
+
 
   //public $incrementing = false;
 

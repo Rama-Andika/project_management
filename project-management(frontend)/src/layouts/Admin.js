@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, Container, Navbar, NavDropdown } from "react-bootstrap";
 import SidebarComponent from "../components/Sidebar";
 
-const LayoutAdmin = ({ children }) => {
+const LayoutAdmin = ({ children, blur }) => {
   const [user, setUser] = useState({});
   const [sidebarToggle, setSidebarToggle] = useState(false);
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ const LayoutAdmin = ({ children }) => {
 
   return (
     <>
-      <div className="d-flex sb-sidenav-toggled" id="wrapper">
+      <div className="d-flex sb-sidenav-toggled" id="wrapper" style={{ filter: `blur(${blur}px)` }}>
         <div style={{ backgroundColor: "white" }} id="sidebar-wrapper">
           <div className="sidebar-heading bg-light text-center">
             <strong>
