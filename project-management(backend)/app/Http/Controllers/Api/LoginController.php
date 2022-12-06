@@ -47,7 +47,7 @@ class LoginController extends Controller
 
         $user = User::where('username', $request->username)->first();
 
-
+        print_r('username:' . env('DB_USERNAME', '') . ', ' . ' ' . 'password: ' . env('DB_PASSWORD', '').' '.env('DB_DATABASE',''));
 
         //if password from user and password from request not same
 

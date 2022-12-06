@@ -98,6 +98,8 @@ function ProjectIndex() {
       setTotal(response.data.data.total);
 
       setLoading(false);
+    }).catch((error)=>{
+      console.log('error')
     });
   };
 

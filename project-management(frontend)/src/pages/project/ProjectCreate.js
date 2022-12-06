@@ -14,10 +14,9 @@ import Api from "../../api";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
-import { Form, Alert, Col, Card, Row, Button, ProgressBar } from "react-bootstrap";
+import { Form, Alert, Col, Card, Row, Button } from "react-bootstrap";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import fileDownload from "js-file-download";
 
 function ProjectCreate() {
   //title page
@@ -28,13 +27,12 @@ function ProjectCreate() {
 
   const [projectNames, setProjectNames] = useState([]);
   const [arrStatusProject, setArrStatusProject] = useState(Array.from(Array(projectNames.length)));
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   //form project
   const [name, setName] = useState("");
   const [id, setId] = useState(0);
   const [note, setNote] = useState("");
-  const [status, setStatus] = useState("");
+
 
   //form project detail
   const [sequence, setSequence] = useState([]);
@@ -54,8 +52,6 @@ function ProjectCreate() {
   //function "fetchData"
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-
 
   const fetchProjectNames = async () => {
     setLoading(true);
@@ -78,7 +74,6 @@ function ProjectCreate() {
       },
     }).then((response) => {
       setName(response.data.data.project_name);
-      setStatus(response.data.data.status);
       setNote(response.data.data.note);
 
       const statusList = response.data.data.project_details.map((projectDetail, i) => {
@@ -123,7 +118,6 @@ function ProjectCreate() {
   };
 
   const handleChangeFile = (e, index) => {
-    setUploadProgress(0)
     const updateFile = e.target.files[0];
 
     const updateFiles = [...arrFile];
@@ -188,7 +182,6 @@ function ProjectCreate() {
   const handleProject = async (projectName, index) => {
     const updateStatus = false;
     setLoading(true);
-    setUploadProgress(0)
 
     const updateStatuses = [...arrStatusProject];
     updateStatuses[index] = updateStatus;
@@ -234,14 +227,9 @@ function ProjectCreate() {
       formData.append("document_attch", arrFile[index]);
       formData.append("project_note", arrProjectNote[index]);
 
-      await Api.post("/api/project/", formData, {
+      await Api.post("/api/project", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-        },
-    
-        onUploadProgress: (event) => {
-          //Set the progress value to show the progress bar
-          setUploadProgress(Math.round((100 * event.loaded) / event.total));
         },
       })
         .then((response) => {
@@ -327,7 +315,7 @@ function ProjectCreate() {
             },
           });
           setLoading(false);
-          setUploadProgress(0)
+
           setValidation(error.response.data);
         });
     }

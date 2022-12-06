@@ -254,7 +254,7 @@ function ProjectEdit() {
       formData.append("document_attch", arrFile[index]);
       formData.append("project_note", arrProjectNote[index]);
 
-      await Api.post("/api/project/", formData, {
+      await Api.post("/api/project", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

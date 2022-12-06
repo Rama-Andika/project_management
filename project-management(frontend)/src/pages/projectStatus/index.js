@@ -95,7 +95,7 @@ function ProjectStatusIndex() {
     }).then((response) => {
       //set data response to state "categories"
 
-      setProjectStatuses(response.data.data.data);
+      setProjectStatuses(response.data.data.data)
 
       //set currentPage
 
@@ -109,7 +109,7 @@ function ProjectStatusIndex() {
 
       setTotal(response.data.data.total);
 
-      setLoading(false);
+      setLoading(false)
     });
   };
 
