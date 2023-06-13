@@ -578,6 +578,7 @@ class ProjectController extends Controller
         return new ProjectResource(false, 'Data project gagal di hapus', null);
     }
 
+
     public function deleteProjectDetail($project_id, $projectNameId)
     {
         $projectDetail = ProjectDetail::whereRaw('project_id = ' . $project_id . ' AND project_name_id = ' . $projectNameId)->delete();
@@ -610,5 +611,6 @@ class ProjectController extends Controller
         // }
 
         return response()->download(storage_path('/app/public/document/' . $file));
+
     }
 }

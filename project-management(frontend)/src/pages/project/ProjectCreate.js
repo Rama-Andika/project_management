@@ -269,16 +269,20 @@ function ProjectCreate() {
     handleProject(projectName, index);
   };
 
+
   const downloadFile = async (fileDl) => {
     let download = require("downloadjs");
 
     await Api.get(`api/downloadFile/${fileDl}`, {
+
       headers: {
         Authorization: `Bearer ${token}`,
       },
       responseType: "blob",
     }).then((res) => {
       download(res.data, fileDl);
+
+
     });
   };
 
