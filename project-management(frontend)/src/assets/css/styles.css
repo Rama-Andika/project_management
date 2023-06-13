@@ -1,12 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
   font-family: "Monstserrat", sans-serif;
   background: #569cb8 !important;
@@ -28,8 +19,6 @@ body {
   -ms-flex: 1;
   flex: 1;
 }
-
-
 
 body.modal-open .container {
   -webkit-filter: blur(2.5px);
@@ -96,7 +85,7 @@ body.modal-open footer {
   width: 100%;
 }
 
-hr{
+hr {
   color: white !important;
   border: 2px solid;
 }
@@ -258,11 +247,6 @@ html:not([dir="rtl"]) .mfe-3 {
   box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
   padding: 10px 10px 15px;
   pointer-events: auto;
-}
-
-.navbar-custom {
-  /* background-color: #198754;
-  border-top: 5px solid #ffb93a; */
 }
 
 .navbar-light .navbar-nav .nav-link {
@@ -559,68 +543,70 @@ html:not([dir="rtl"]) .mfe-3 {
   background-color: #edf2f4 !important;
 }
 
-
-
 footer {
   min-height: 50px;
- 
 }
 
-.form-width{
+.form-width {
   width: auto;
 }
 
-.login-card{
+.login-card {
   height: 100vh;
+  padding-top: 100px;
   background-color: white;
 }
 
-.form-login{
+.login-form {
+  background-color: white;
+}
+
+.form-login {
   padding: 0 50px;
 }
 
-@media only screen and (max-width: 437px){
-  .form-width{
+@media only screen and (max-width: 437px) {
+  .form-width {
     width: 100%;
   }
 }
 
-@media only screen and (min-width: 1234px){
-  .form-login{
+@media only screen and (min-width: 1234px) {
+  .form-login {
     padding: 0 50px;
   }
 }
 
-
-@media only screen and (max-width: 768px){
-  .login-card{
+@media only screen and (max-width: 768px) {
+  .login-card {
     background-color: white;
-    padding-top: 50px
+    padding-top: 100px;
   }
-  .login-form{
+  .login-form {
+    background-color: white;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
   }
-  .imgLogin{
-    position: relative
+  .imgLogin {
+    position: relative;
   }
 
-  .form-login{
+  .form-login {
     padding: 0 50px;
   }
 }
 
-.btn-add{
+.btn-add {
   background-color: #569cb8;
 }
 
-.btn-add:hover{
+.btn-add:hover {
   background-color: #264653 !important;
 }
 
-.bOQEtf{
+.bOQEtf {
   width: 15rem !important;
   min-width: 15rem !important;
 }

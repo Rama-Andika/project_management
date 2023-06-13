@@ -28,7 +28,6 @@ const LayoutAdmin = ({ children, blur }) => {
   };
 
   useEffect(() => {
-    // fecth data user
     async function getData() {
       await Api.get("/api/user", {
         headers: {
@@ -41,8 +40,6 @@ const LayoutAdmin = ({ children, blur }) => {
 
     getData();
   }, [token]);
-
-  // function logout
 
   const logoutHandler = async (e) => {
     e.preventDefault();
@@ -74,7 +71,9 @@ const LayoutAdmin = ({ children, blur }) => {
         <div style={{ backgroundColor: "white" }} id="sidebar-wrapper">
           <div className="sidebar-heading bg-light text-center">
             <strong>
-              <Link to="/project" style={{ textDecoration: 'none', color: 'white' }}>Project Management</Link>
+              <Link to="/project" style={{ textDecoration: "none", color: "white" }}>
+                Project Management
+              </Link>
             </strong>
           </div>
 
@@ -95,10 +94,6 @@ const LayoutAdmin = ({ children, blur }) => {
                     <NavDropdown.Item as={Link} to="/project">
                       Project
                     </NavDropdown.Item>
-
-                    {/* <NavDropdown.Item as={Link} to="/projectDetail">
-                      Project Detail
-                    </NavDropdown.Item> */}
 
                     <NavDropdown.Divider />
 

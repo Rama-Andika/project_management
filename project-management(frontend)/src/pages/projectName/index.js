@@ -24,27 +24,17 @@ import EditAction from "../../components/EditAction";
 import DeleteAction from "../../components/DeleteAction";
 
 function ProjectNameIndex() {
-  //title page
-
   document.title = "Project Name";
-
-  //state posts
 
   const [projectNames, setProjectNames] = useState([]);
 
-  const [sortType, setSortType] = useState("desc");
+  // const [sortType, setSortType] = useState("desc");
 
   const [edit, setEdit] = useState({});
 
-  //state currentPage
-
   const [currentPage, setCurrentPage] = useState(1);
 
-  //state perPage
-
   const [perPage, setPerPage] = useState(0);
-
-  //state total
 
   const [total, setTotal] = useState(0);
 
@@ -62,42 +52,24 @@ function ProjectNameIndex() {
 
   const [q, setQ] = useState("");
 
-  //token
-
   const token = Cookies.get("token");
 
-  //function "fetchData"
-
   const fetchData = async (pageNumber, searchData) => {
-    //define variable "searchQuery"
-
     const page = pageNumber ? pageNumber : currentPage;
     const searchQuery = searchData ? searchData : q;
 
     setLoading(true);
 
-    //fetching data from Rest API
-
     await Api.get(`/api/projectName?page=${page}&q=${searchQuery}`, {
       headers: {
-        //header Bearer + Token
-
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      //set data response to state "categories"
-
       setProjectNames(response.data.data.data);
-
-      //set currentPage
 
       setCurrentPage(response.data.data.current_page);
 
-      //set perPage
-
       setPerPage(response.data.data.per_page);
-
-      //total
 
       setTotal(response.data.data.total);
 
@@ -105,27 +77,27 @@ function ProjectNameIndex() {
     });
   };
 
-  const sortedData = (projectNames) => {
-    let result;
+  // const sortedData = (projectNames) => {
+  //   let result;
 
-    if (sortType === "desc") {
-      result = [...projectNames].sort((a, b) => {
-        return b.sequence.toString().localeCompare(a.sequence.toString(), "en", {
-          numeric: true,
-        });
-      });
-    } else if (sortType === "asc") {
-      result = [...projectNames].sort((a, b) => {
-        return a.sequence.toString().localeCompare(b.sequence.toString(), "en", {
-          numeric: true,
-        });
-      });
-    } else {
-      return projectNames;
-    }
+  //   if (sortType === "desc") {
+  //     result = [...projectNames].sort((a, b) => {
+  //       return b.sequence.toString().localeCompare(a.sequence.toString(), "en", {
+  //         numeric: true,
+  //       });
+  //     });
+  //   } else if (sortType === "asc") {
+  //     result = [...projectNames].sort((a, b) => {
+  //       return a.sequence.toString().localeCompare(b.sequence.toString(), "en", {
+  //         numeric: true,
+  //       });
+  //     });
+  //   } else {
+  //     return projectNames;
+  //   }
 
-    setProjectNames(result);
-  };
+  //   setProjectNames(result);
+  // };
 
   //hook
 
@@ -136,11 +108,11 @@ function ProjectNameIndex() {
   }, []);
 
   // and on sortType change you can handle it like this:
-  useEffect(() => {
-    sortedData(projectNames);
+  // useEffect(() => {
+  //   sortedData(projectNames);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortType]);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [sortType]);
 
   const handleShowModal = () => {
     setShowModal(true);
@@ -313,14 +285,14 @@ function ProjectNameIndex() {
               <Card.Body>
                 <Row>
                   <Col xs={10}>
-                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name='name'/>
+                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name="name" />
                   </Col>
                   <Col xs={2}>
-                    <Addbutton size="md" onClick={handleShowModal} display='none' />
+                    <Addbutton size="md" onClick={handleShowModal} display="none" />
                   </Col>
                 </Row>
                 <Table className="table" responsive bordered hover>
-                  <thead style={{ backgroundColor: '#569cb8' }} className="text-white">
+                  <thead style={{ backgroundColor: "#569cb8" }} className="text-white">
                     <tr>
                       <th className="text-nowrap">Name</th>
                       <th className="text-nowrap">Sequence</th>
@@ -355,7 +327,7 @@ function ProjectNameIndex() {
                                 onDelete={() => {
                                   deleteProjectName(data.id);
                                 }}
-                                display = "none"
+                                display="none"
                               />
                             </td>
                           </tr>
@@ -364,7 +336,8 @@ function ProjectNameIndex() {
                     )}
                   </tbody>
                 </Table>
-                <Row>
+                <Row className="mt-4">
+                  <Col className="text-nowrap">Total : {total}</Col>
                   <Col>
                     <PaginationComponent currentPage={currentPage} perPage={perPage} total={total} onChange={(pageNumber) => fetchData(pageNumber)} position="end" />
                   </Col>

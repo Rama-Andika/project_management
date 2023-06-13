@@ -113,7 +113,6 @@ class ProjectController extends Controller
                     'project_name_id'   => 'required',
                     'project_status_id'   => 'required',
                     'document_attch'   => 'max:3000',
-                    'project_note'   => 'required',
                 ]);
 
                 if ($validator->fails()) {
@@ -132,6 +131,12 @@ class ProjectController extends Controller
                 ]);
 
 
+                if($request->project_note == null){
+                    $project_note = "-";
+                }
+                else{
+                    $project_note = $request->project_note;
+                }
 
                 if ($request->file('document_attch')) {
                     $selected_document = ProjectDetail::whereRaw('project_id = "' . $project->id . '" AND project_name_id = "' . $request->project_name_id . '"')->value('document_attch');
@@ -153,7 +158,7 @@ class ProjectController extends Controller
                             'sequence'   => $update_sequence,
                             'project_status_id'   => $request->project_status_id,
                             'document_attch'   => $filenameWithExt,
-                            'project_note'   => $request->project_note,
+                            'project_note'   => $project_note,
                         ]);
 
                     $maxSequence = ProjectStatus::where('project_name_id', '=', $request->project_name_id)->max('sequence');
@@ -169,7 +174,7 @@ class ProjectController extends Controller
                             'project_name_id'   => $request->project_name_id,
                             'sequence'   => $update_sequence,
                             'project_status_id'   => $request->project_status_id,
-                            'project_note'   => $request->project_note,
+                            'project_note'   => $project_note,
                         ]);
 
                         
@@ -210,7 +215,6 @@ class ProjectController extends Controller
                     'project_name_id'   => 'required',
                     'project_status_id'   => 'required',
                     'document_attch'   => 'max:3000',
-                    'project_note'   => 'required',
                 ]);
 
                 if ($validator->fails()) {
@@ -225,6 +229,13 @@ class ProjectController extends Controller
                 $project->update([
                     'status' => $status,
                 ]);
+
+                if($request->project_note == null){
+                    $project_note = "-";
+                }
+                else{
+                    $project_note = $request->project_note;
+                }
 
                 if ($request->hasFile('document_attch')) {
 
@@ -241,7 +252,7 @@ class ProjectController extends Controller
                         'sequence'   => $sequence,
                         'project_status_id'   => $request->project_status_id,
                         'document_attch'   => $filenameWithExt,
-                        'project_note'   => $request->project_note,
+                        'project_note'   => $project_note,
 
                     ]);
                 } else {
@@ -252,7 +263,7 @@ class ProjectController extends Controller
                         'sequence'   => $sequence,
                         'project_status_id'   => $request->project_status_id,
                         'document_attch'   => "-",
-                        'project_note'   => $request->project_note,
+                        'project_note'   => $project_note,
 
                     ]);
                 }
@@ -285,7 +296,7 @@ class ProjectController extends Controller
                 'project_name_id'   => 'required',
                 'project_status_id'   => 'required',
                 'document_attch'   => 'max:3000',
-                'project_note'   => 'required',
+
             ]);
 
 
@@ -329,14 +340,18 @@ class ProjectController extends Controller
             $projectCount = ProjectName::get()->count();
 
 
-
             $project_id = $project->id;
+            if($request->project_note == null){
+                $request->project_note = "-";
+            }
+
             if ($request->hasFile('document_attch')) {
                 $filenameWithExt = $request->file('document_attch')->getClientOriginalName();
 
 
                 $document_attch = $request->file('document_attch');
                 $document_attch->storeAs('public/document', $filenameWithExt);
+               
 
                 $projectDetail = ProjectDetail::create([
 
@@ -533,6 +548,19 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        $maxSeq = ProjectDetail::where('project_id', '=', $project->id)->max('sequence');
+        $listSeq = ProjectDetail::where('project_id', '!=', $project->id)->pluck('sequence');
+
+        foreach ($listSeq as $value) {
+            if($value == ($maxSeq + 1)){
+                $updateSeq = ProjectDetail::whereRaw('sequence > '.$maxSeq)->update([
+                    'sequence' => DB::raw('sequence - 1')
+                ]);
+
+              
+            }
+        }
+        
         $projectDetail = ProjectDetail::where('project_id', '=', $project->id)->delete();
 
         if ($projectDetail) {

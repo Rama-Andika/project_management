@@ -31,7 +31,7 @@ const columns = [
 ];
 
 function ProjectNameIndex() {
-  //title page
+
 
   document.title = "Project Name";
 

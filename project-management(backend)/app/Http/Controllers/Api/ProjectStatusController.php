@@ -7,6 +7,7 @@ use App\Http\Resources\ProjectStatusResource;
 use App\Models\ProjectStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 
 
@@ -20,8 +21,9 @@ class ProjectStatusController extends Controller
     public function index()
     {
         $projectStatus = ProjectStatus::with('projectName')->when(request()->q, function ($projectStatus) {
-            $projectStatus = $projectStatus->where('status', 'like', '%' . request()->q . '%');
-        })->orderBy('project_name_id')->orderBy('sequence')->paginate(10);
+            $projectStatus = $projectStatus ->join('project_names', 'project_statuses.project_name_id', '=', 'project_names.id')
+                                            ->whereRaw('status LIKE "%' . request()->q . '%" OR project_names.name LIKE "%' . request()->q . '%"');
+        })->orderBy('project_name_id')->orderBy('project_statuses.sequence')->paginate(10);
 
 
         // ProjectStatus::join('project_names','project_names.id','=','project_statuses.project_name_id')->when(request()->q, function ($projectStatus) {
@@ -29,7 +31,7 @@ class ProjectStatusController extends Controller
         // })->orderBy('project_name_id')->orderBy('project_statuses.sequence')->paginate(5);
 
 
-        
+
         // ProjectStatus::where('project_name_id','=',"7")->pluck('id');
         // $arrStatus = Array($projectStatus);
         // if(count($projectStatus) > 0){
@@ -55,7 +57,7 @@ class ProjectStatusController extends Controller
 
     public function searchMaxSequence($project_name_id)
     {
-        $sequence = ProjectStatus::whereRaw('project_name_id = "'.$project_name_id. '"')->max('sequence');
+        $sequence = ProjectStatus::whereRaw('project_name_id = "' . $project_name_id . '"')->max('sequence');
 
         //return with Api Resource
         return new ProjectStatusResource(true, 'Sequence', $sequence);
@@ -83,12 +85,12 @@ class ProjectStatusController extends Controller
         $sequenceList = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status NOT LIKE "' . $request->status . '"')->pluck('sequence');
 
         if ($checked_status != null) {
-            
-            return response()->json(['errors' => "Data already exists"], 422);
+
+            return response()->json(['errors' => "Data or sequence already exists"], 422);
         } else {
             foreach ($sequenceList as $sequence) {
                 if ($request->sequence == $sequence) {
-                    return response()->json(['errors' => "Data already exists"], 422);
+                    return response()->json(['errors' => "Data or sequence already exists"], 422);
                 }
             }
             $validator = Validator::make($request->all(), [
@@ -191,7 +193,7 @@ class ProjectStatusController extends Controller
             if ($projectStatus->id == $last_status->id) {
                 foreach ($sequenceList as $sequence) {
                     if ($request->sequence == $sequence) {
-                        return response()->json(['errors' => "Data already exists"], 422);
+                        return response()->json(['errors' => "Data or sequence already exists"], 422);
                     }
                 }
 
@@ -214,9 +216,16 @@ class ProjectStatusController extends Controller
 
 
             } else {
-                return response()->json(['errors' => "Data already exists"], 422);
+                return response()->json(['errors' => "Data or sequence already exists"], 422);
             }
         } else {
+            $sequenceList = ProjectStatus::whereRaw('project_name_id = "' . $request->project_name_id . '" AND status NOT LIKE "' . $request->status . '"')->pluck('sequence');
+            foreach ($sequenceList as $sequence) {
+                if ($sequence === $projectStatus->sequence) {
+                    return response()->json(['errors' => "Data or sequence already exists"], 422);
+                }
+            }
+
             $validator = Validator::make($request->all(), [
                 'project_name_id' => 'required',
                 'status' => 'required',

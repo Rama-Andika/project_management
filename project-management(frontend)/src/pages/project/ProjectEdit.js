@@ -20,26 +20,17 @@ import { Button, Card, Col, Row, Form, Alert } from "react-bootstrap";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useParams } from "react-router-dom";
-import fileDownload from "js-file-download";
 
 function ProjectEdit() {
-  //title page
-
   document.title = "Project Edit";
-
-  //state posts
 
   const [projectNames, setProjectNames] = useState([]);
 
   const [arrStatusProject, setArrStatusProject] = useState(Array.from(Array(projectNames.length)));
 
-  //form project
-  const [projectid, setProjectId] = useState(0);
   const [name, setName] = useState("");
-  const [status, setStatus] = useState("");
   const [note, setNote] = useState("");
 
-  //form project detail
   const [sequence, setSequence] = useState([]);
   const [maxSequence, setMaxSequence] = useState([]);
   const [arrProjectStatus, setArrProjectStatus] = useState([]);
@@ -52,11 +43,7 @@ function ProjectEdit() {
 
   const { id } = useParams();
 
-  //token
-
   const token = Cookies.get("token");
-
-  //function "fetchData"
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -69,7 +56,7 @@ function ProjectEdit() {
       },
     }).then((response) => {
       setName(response.data.data.project_name);
-      setStatus(response.data.data.status);
+
       setNote(response.data.data.note);
 
       const statusList = response.data.data.project_details.map((projectDetail, i) => {
@@ -96,18 +83,10 @@ function ProjectEdit() {
         return (updateProjectFiles[i] = updateProjectFile);
       });
 
-      // const statusListproject = projectNames.map((p, i) => {
-      //   const updateStatus = false;
-
-      //   const updateStatuses = [...arrStatusProject];
-      //   return (updateStatuses[i] = updateStatus);
-      // });
-
       setArrProjectStatus(statusList);
       setArrProjectNote(noteList);
       setSequence(sequenceList);
       setArrFile(fileList);
-      // setArrStatusProject(statusListproject);
 
       setLoading(false);
     });
@@ -150,11 +129,13 @@ function ProjectEdit() {
       },
     }).then((response) => {
       setProjectNames(response.data.data);
-     const max_sequence = response.data.data.map((projectName, index) => {
-       return Math.max(...projectName.project_statuses.map((p) => {
+      const max_sequence = response.data.data.map((projectName, index) => {
+        return Math.max(
+          ...projectName.project_statuses.map((p) => {
             return p.project_name_id === projectName.id && p.sequence;
-          
-          }),0);
+          }),
+          0
+        );
       });
 
       setMaxSequence(max_sequence);
@@ -220,11 +201,12 @@ function ProjectEdit() {
       setArrProjectStatus(updateProjectStatues);
 
       const updateProjectNotes = [...arrProjectNote];
-      updateProjectNotes[index] = "";
+      updateProjectNotes[index] = "-";
       setArrProjectNote(updateProjectNotes);
     } else if (arrProjectNote[index] === undefined) {
       const updateProjectNotes = [...arrProjectNote];
-      updateProjectNotes[index] = "";
+      updateProjectNotes[index] = "-";
+      arrProjectNote[index] = "-";
       setArrProjectNote(updateProjectNotes);
     } else if (arrProjectStatus[index] === undefined) {
       const updateProjectStatues = [...arrProjectStatus];
@@ -244,7 +226,7 @@ function ProjectEdit() {
       setArrProjectNote(updateProjectNotes);
     }
 
-    if (arrProjectNote[index] !== undefined && arrProjectStatus[index] !== undefined) {
+    if (arrProjectStatus[index] !== undefined) {
       const formData = new FormData();
       formData.append("project_id", id);
       formData.append("project_name", name);
@@ -270,7 +252,6 @@ function ProjectEdit() {
             },
           });
 
-          setProjectId(response.data.data.id);
           searchSequence(arrProjectStatus[index], index);
           searchMaxSequence(projectName, index);
 
@@ -316,40 +297,16 @@ function ProjectEdit() {
     setLoading(false);
   };
 
-  //hook
-
   const handleSubmitProject = (projectName, index) => {
-    //e.preventDefault();
-    // if(!status === "" && !file === "" && !projectNote === ""){
-
-    // }
-
     handleProject(projectName, index);
-
-    // if (sequence[index] !== undefined) {
-    //   projectNames.map((nameProject) => {
-    //     if (sequence[index] < Math.max(...nameProject.project_statuses.map((projectStatus) => projectStatus.project_name_id === projectName && projectStatus.sequence), 0)) {
-    //       deleteProjectDetail(id, projectName);
-    //     }
-    //   });
-    // }
-
-    // if (project !== "") {
-    //   console.log(project);
-    //   handleProjectDetail(projectName);
-    // }
   };
 
   useEffect(() => {
-    //call function "fetchData"
-
     fetchProjectNames();
     fetchProjectById();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-
 
   return (
     <React.Fragment>
@@ -402,10 +359,6 @@ function ProjectEdit() {
                                   <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined || arrFile[i] !== "-" ? false : true} style={{ textDecoration: "none" }}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button>
-
-                                  {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
-                                    <i class="fa-solid fa-download"></i> Download File
-                                  </Button> */}
                                 </Form.Group>
                                 {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                               </>
@@ -415,8 +368,6 @@ function ProjectEdit() {
                               <Form.Label>Note</Form.Label>
                               <Form.Control as="textarea" rows={3} value={arrProjectNote[i]} onChange={(e) => handleChangeProjectNote(e, i)} />
                             </Form.Group>
-
-                            {arrProjectNote[i] === "" && <Alert variant="danger">The note field is required</Alert>}
 
                             <Button
                               variant="link"
@@ -430,14 +381,9 @@ function ProjectEdit() {
                           </Card.Body>
                         </Card>
                       ))}
-                      {/* {console.log(sequence)} */}
 
                       {projectNames.map((projectName, i) => (
                         <>
-                          {/* <Form.Control type="hidden" value={++i} /> */}
-                          {/* {projectName.project_statuses.map((projectStatus)=>(
-                            
-                          ))} */}
                           {projectName.sequence !== 1 && sequence[i - 1] !== undefined && sequence[i - 1] === maxSequence[i - 1] && (
                             <>
                               <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
@@ -463,9 +409,6 @@ function ProjectEdit() {
                                         <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrFile[i] !== undefined || arrFile[i] !== "-" ? false : true} style={{ textDecoration: "none" }}>
                                           <i class="fa-solid fa-download"></i> Download File
                                         </Button>
-                                        {/* <Button className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
-                                        <i class="fa-solid fa-download"></i> Download File
-                                        </Button> */}
                                       </Form.Group>
                                       {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                                     </>
@@ -476,7 +419,6 @@ function ProjectEdit() {
                                     <Form.Control as="textarea" rows={3} value={arrProjectNote[i]} onChange={(e) => handleChangeProjectNote(e, i)} />
                                   </Form.Group>
 
-                                  {arrProjectNote[i] === "" && <Alert variant="danger">The note field is required</Alert>}
                                   <Button
                                     variant="link"
                                     disabled={loading ? true : false}
@@ -492,7 +434,6 @@ function ProjectEdit() {
                           )}
                         </>
                       ))}
-                      {/* <Button type="submit">Simpan</Button> */}
                     </Form>
                   </Col>
                 </Row>

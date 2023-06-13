@@ -23,6 +23,7 @@ import Addbutton from "../../components/Addbutton";
 import EditAction from "../../components/EditAction";
 import DeleteAction from "../../components/DeleteAction";
 import TableHead from "../../components/table/TableHead";
+import Select from "react-select";
 
 const columns = [
   { label: "Status", accessor: "status", sortable: true },
@@ -32,33 +33,22 @@ const columns = [
 ];
 
 function ProjectStatusIndex() {
-  //title page
-
   document.title = "Project Status";
 
-  //state posts
-
   const [projectStatuses, setProjectStatuses] = useState([]);
-  const [projectNames, setProjectNames] = useState([]);
-  const [projectNameId, setProjectNameId] = useState("");
+  // const [projectNames, setProjectNames] = useState([]);
+  const [projectNameId, setProjectNameId] = useState({});
 
   const [edit, setEdit] = useState({});
 
-  //state currentPage
-
   const [currentPage, setCurrentPage] = useState(1);
 
-  //state perPage
-
   const [perPage, setPerPage] = useState(0);
-
-  //state total
 
   const [total, setTotal] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
 
-  const [name, setName] = useState("");
   const [sequence, setSequence] = useState("");
   const [status, setStatus] = useState("");
 
@@ -70,46 +60,30 @@ function ProjectStatusIndex() {
 
   const [q, setQ] = useState("");
 
-  //token
+  const [options, setOptions] = useState([]);
 
   const token = Cookies.get("token");
 
-  //function "fetchData"
-
   const fetchData = async (pageNumber, searchData) => {
-    //define variable "searchQuery"
-
     const page = pageNumber ? pageNumber : currentPage;
     const searchQuery = searchData ? searchData : q;
 
     setLoading(true);
 
-    //fetching data from Rest API
-
     await Api.get(`/api/projectStatus?q=${searchQuery}&page=${page}`, {
       headers: {
-        //header Bearer + Token
-
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      //set data response to state "categories"
-
-      setProjectStatuses(response.data.data.data)
-
-      //set currentPage
+      setProjectStatuses(response.data.data.data);
 
       setCurrentPage(response.data.data.current_page);
 
-      //set perPage
-
       setPerPage(response.data.data.per_page);
-
-      //total
 
       setTotal(response.data.data.total);
 
-      setLoading(false)
+      setLoading(false);
     });
   };
 
@@ -119,32 +93,35 @@ function ProjectStatusIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNames(response.data.data);
+      if (response.data.data.length > 0) {
+        // eslint-disable-next-line array-callback-return
+        const optionsValue = response.data.data.map((p, i) => {
+          const optionsCopy = [...options];
+          return (optionsCopy[i] = { value: p.id, label: p.name, key:p.id });
+        });
+
+        setOptions(optionsValue);
+      }
+      // setProjectNames(response.data.data);
     });
   };
 
   function titleCase(str) {
     var splitStr = str.toLowerCase().split(" ");
     for (var i = 0; i < splitStr.length; i++) {
-      // You do not need to check if i is larger than splitStr length, as your for does that for you
-      // Assign it back to the array
       splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
     }
-    // Directly return the joined string
+
     return splitStr.join(" ");
   }
 
   useEffect(() => {
-    //call function "fetchData"
-
     fetchData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    //call function "fetchData"
-
     fetchProjectName();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,7 +135,6 @@ function ProjectStatusIndex() {
   const handleCloseModal = () => {
     setShowModal(false);
     setValidation({});
-    setName("");
     setProjectNameId("");
     setSequence("");
     setStatus("");
@@ -236,7 +212,7 @@ function ProjectStatusIndex() {
     const formData = new FormData();
 
     if (edit.id) {
-      formData.append("project_name_id", projectNameId);
+      formData.append("project_name_id", projectNameId.value);
       formData.append("status", titleCase(status));
 
       formData.append("_method", "PATCH");
@@ -266,7 +242,7 @@ function ProjectStatusIndex() {
           setValidation(error.response.data);
         });
     } else {
-      formData.append("project_name_id", projectNameId);
+      formData.append("project_name_id", projectNameId.value);
       formData.append("status", titleCase(status));
       formData.append("sequence", sequence);
 
@@ -298,8 +274,7 @@ function ProjectStatusIndex() {
 
   const editHandler = (projectStatus) => {
     setEdit(projectStatus);
-    setProjectNameId(projectStatus.project_name_id);
-    setName(projectStatus.project_name_id);
+    setProjectNameId({value: projectStatus.project_name_id, label: projectStatus.project_name.name, key: projectStatus.project_name_id});
     setSequence(projectStatus.sequence);
     setStatus(projectStatus.status);
     handleShowModal();
@@ -309,6 +284,29 @@ function ProjectStatusIndex() {
     e.preventDefault();
 
     fetchData(1, q);
+  };
+
+  const handleChangeSelect = (item) => {
+   
+    setProjectNameId(item);
+    
+  };
+
+
+
+  const customeStyles = {
+    control: (baseStyles, state) => ({
+      ...baseStyles,
+      backgroundColor: "#edf2f4",
+    }),
+    menu: (baseStyles, state) => ({
+      ...baseStyles,
+      backgroundColor: "#edf2f4",
+    }),
+    option: (baseStyles, state) => ({
+      ...baseStyles,
+      backgroundColor: state.isSelected ? "#569cb8" : state.isFocused && "#caf0f8",
+    }),
   };
 
   return (
@@ -324,7 +322,7 @@ function ProjectStatusIndex() {
               <Card.Body>
                 <Row>
                   <Col xs={10}>
-                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name="status name" />
+                    <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name="status, project" />
                   </Col>
                   <Col xs={2}>
                     <Addbutton size="md" onClick={handleShowModal} />
@@ -349,8 +347,6 @@ function ProjectStatusIndex() {
                     ) : (
                       projectStatuses.map((projectStatus, index) => (
                         <tr key={projectStatus.id}>
-                          {/* <td>{++index + (currentPage - 1) * perPage}</td> */}
-
                           <td>{projectStatus.status}</td>
                           <td>{projectStatus.project_name.name}</td>
 
@@ -368,7 +364,8 @@ function ProjectStatusIndex() {
                     )}
                   </tbody>
                 </Table>
-                <Row>
+                <Row className="mt-4">
+                  <Col className="text-nowrap">Total : {total}</Col>
                   <Col>
                     <PaginationComponent currentPage={currentPage} perPage={perPage} total={total} onChange={(pageNumber) => fetchData(pageNumber)} position="end" />
                   </Col>
@@ -386,20 +383,24 @@ function ProjectStatusIndex() {
             <Form onSubmit={storeStatus}>
               <Form.Group className="mb-3">
                 <Form.Label>Project Name</Form.Label>
-                <Form.Select value={projectNameId} onChange={(e) => setProjectNameId(e.target.value)}>
+
+                {/* <Form.Select value={projectNameId} onChange={(e) => setProjectNameId(e.target.value)}>
                   <option value="">-- Select project --</option>
                   {projectNames.map((projectName) => (
                     <option key={projectName.id} value={projectName.id}>
                       {projectName.name}
                     </option>
                   ))}
-                </Form.Select>
+                </Form.Select> */}
+                {/* <SelectSearch options={projectNames.map((projectName)=>({name:projectName.name, value:projectName.id}))} value={projectNameId} search placeholder="Select..." onChange={setProjectNameId} /> */}
+                <Select onChange={handleChangeSelect} defaultValue={projectNameId} options={options} noOptionsMessage={() => "Data not found"} styles={customeStyles} placeholder="Select project..." required />
               </Form.Group>
               {validation.project_name_id && <Alert variant="danger">{validation.project_name_id}</Alert>}
 
               <Form.Group className="mb-3">
                 <Form.Label>Status</Form.Label>
-                <Form.Control type="text" value={status} onChange={(e) => setStatus(titleCase(e.target.value))} />
+                <Form.Control type="text" value={status} onChange={(e) => setStatus(e.target.value)} required />
+           
               </Form.Group>
               {validation.status && (
                 <Alert variant="danger" className="mb-3">
@@ -411,7 +412,7 @@ function ProjectStatusIndex() {
                 <>
                   <Form.Group className="mb-3">
                     <Form.Label>Sequence</Form.Label>
-                    <Form.Control type="number" value={sequence} onChange={(e) => setSequence(e.target.value)} />
+                    <Form.Control type="number" value={sequence} onChange={(e) => setSequence(e.target.value)} required />
                   </Form.Group>
                   {validation.sequence && (
                     <Alert variant="danger" className="mb-3">
@@ -432,6 +433,7 @@ function ProjectStatusIndex() {
                     <Button className="w-100" disabled variant="warning">
                       <Loading size="sm" />
                     </Button>
+                    
                   ) : (
                     <Button type="submit" className="w-100" variant="warning">
                       Edit

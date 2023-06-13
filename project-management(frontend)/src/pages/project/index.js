@@ -21,17 +21,13 @@ import Moment from "react-moment";
 import DatePicker from "react-date-picker";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import Select from "react-select";
 
 function ProjectIndex() {
-  //title page
-
   document.title = "Project";
-
-  //state posts
 
   const [projects, setProjects] = useState([]);
   const [projectNames, setProjectNames] = useState([]);
-  const [projectNumbers, setProjectNumbers] = useState([]);
   const [status, setStatus] = useState("-1");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -39,31 +35,21 @@ function ProjectIndex() {
   const [showModal, setShowModal] = useState(false);
   const [blur, setBlur] = useState(0);
 
-  //state currentPage
-
   const [currentPage, setCurrentPage] = useState(1);
 
-  //state perPage
-
   const [perPage, setPerPage] = useState(0);
-
-  //state total
 
   const [total, setTotal] = useState(0);
 
   const [loading, setLoading] = useState(false);
 
-  //token
-
   const token = Cookies.get("token");
+
+  const [options, setOptions] = useState([]);
 
   const [number, setNumber] = useState("PRJ");
 
-  //function "fetchData"
-
   const fetchData = async (pageNumber, sStatus, sNumber, firstDate, secondDate) => {
-    //define variable "searchQuery"
-
     const page = pageNumber ? pageNumber : currentPage;
     const date1 = format(firstDate ? firstDate : startDate, "yyyy-MM-dd");
     const date2 = format(secondDate ? secondDate : endDate, "yyyy-MM-dd");
@@ -72,34 +58,20 @@ function ProjectIndex() {
 
     setLoading(true);
 
-    //fetching data from Rest API
-
     await Api.get(`/api/searchBy/${tempStatus},${tempNumber},${date1},${date2}?page=${page}`, {
       headers: {
-        //header Bearer + Token
-
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      //set data response to state "categories"
-
       setProjects(response.data.data.data);
-
-      //set currentPage
 
       setCurrentPage(response.data.data.current_page);
 
-      //set perPage
-
       setPerPage(response.data.data.per_page);
-
-      //total
 
       setTotal(response.data.data.total);
 
       setLoading(false);
-    }).catch((error)=>{
-      console.log('error')
     });
   };
 
@@ -119,15 +91,18 @@ function ProjectIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setProjectNumbers(response.data.data);
+      if (response.data.data.length > 0) {
+        const optionsValue = response.data.data.map((p, i) => {
+          const optionsCopy = [...options];
+          return (optionsCopy[i] = { value: p.number, label: p.number });
+        });
+
+        setOptions(optionsValue);
+      }
     });
   };
 
-  //hook
-
   useEffect(() => {
-    //call function "fetchData"
-
     fetchData();
     fetchProjectName();
     fetchProjectNumber();
@@ -181,7 +156,7 @@ function ProjectIndex() {
                             },
                           });
                           fetchData();
-                          fetchProjectNumber()
+                          fetchProjectNumber();
                         });
                         onClose();
                       }}
@@ -198,11 +173,34 @@ function ProjectIndex() {
     });
   };
 
+  const customeStyles = {
+    control: (baseStyles, state) => ({
+      ...baseStyles,
+      width: "50%",
+      backgroundColor: "#edf2f4",
+      border: state.isFocused ? "1px solid #569cb8" : "0.1px solid hsl(0, 0%, 80%)",
+      boxShadow: state.isFocused && "0px 0px 0px #569cb8",
+      "&:hover": {
+        borderColor: "#569cb8",
+      },
+    }),
+    menu: (baseStyles, state) => ({
+      ...baseStyles,
+      width: "50%",
+      backgroundColor: "#edf2f4",
+    }),
+    option: (baseStyles, state) => ({
+      ...baseStyles,
+      backgroundColor: state.isSelected ? "#569cb8" : state.isFocused && "#caf0f8",
+    }),
+  };
+
   return (
     <React.Fragment>
       <LayoutAdmin>
         <Row className=" mt-4" style={{ filter: `blur(${blur}px)` }}>
           <Col xs={12}>
+          
             <Card className="border-0 rounded shadow-sm">
               <Card.Header>
                 <span className="fw-bold">PROJECT</span>
@@ -211,24 +209,29 @@ function ProjectIndex() {
               <Card.Body>
                 <Row>
                   <Col xs={12} className="mb-4">
-                  <p><strong>Search Parameter :</strong></p>
+                    <p>
+                      <strong>Search Parameter :</strong>
+                    </p>
                     <Form onSubmit={searchHandler}>
                       <Form.Group className="mb-3" controlId="formBasicStatus">
                         <Form.Label>Project Status</Form.Label>
-                        <Form.Select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: "50%" }}>
-                          <option value="-1">All</option>
-                          <option value="0">In Progress</option>
-                          <option value="1">Done</option>
-                        </Form.Select>
+
+                        <Select
+                          onChange={(e) => setStatus(e.value)}
+                          defaultValue={status}
+                          options={[
+                            { value: "-1", label: "All" },
+                            { value: "0", label: "In Progress" },
+                            { value: "1", label: "Done" },
+                          ]}
+                          noOptionsMessage={() => "Data not found"}
+                          styles={customeStyles}
+                        />
                       </Form.Group>
                       <Form.Group className="mb-3" controlId="formBasicNumber">
                         <Form.Label>Number</Form.Label>
-                        <Form.Select value={number} onChange={(e) => setNumber(e.target.value)} style={{ width: "50%" }}>
-                          <option value="PRJ">All Number</option>
-                          {projectNumbers.map((projectNumber) => (
-                            <option key={projectNumber.id} value={projectNumber.number}>{projectNumber.number}</option>
-                          ))}
-                        </Form.Select>
+
+                        <Select onChange={(e) => setNumber(e.value)} defaultValue={number} options={[{ value: "PRJ", label: "All" }, ...options]} noOptionsMessage={() => "Data not found"} styles={customeStyles} />
                       </Form.Group>
                       <Form.Group className="mb-3" controlId="formBasicDate">
                         <Form.Label>Date Between</Form.Label>
@@ -236,6 +239,8 @@ function ProjectIndex() {
                           <Col xs={12} sm={4} className="form-width">
                             <DatePicker
                               format="MM-dd-y"
+                              clearIcon={null}
+                              calendarIcon=<i className="fa-regular fa-calendar"></i>
                               onChange={(date) => {
                                 setStartDate(date);
                               }}
@@ -250,6 +255,8 @@ function ProjectIndex() {
                           <Col xs={12} sm={4} className="form-width">
                             <DatePicker
                               format="MM-dd-y"
+                              clearIcon={null}
+                              calendarIcon=<i className="fa-regular fa-calendar"></i>
                               onChange={(date) => {
                                 setEndDate(date);
                               }}
@@ -268,12 +275,12 @@ function ProjectIndex() {
                   </Col>
                 </Row>
                 <Table responsive bordered hover>
-                  <thead style={{ backgroundColor: '#569cb8' }} className="text-white">
+                  <thead style={{ backgroundColor: "#569cb8" }} className="text-white">
                     <tr>
                       <th>No</th>
 
                       <th>Action</th>
-                      
+
                       <th>Status</th>
 
                       <th>Number</th>
@@ -283,7 +290,9 @@ function ProjectIndex() {
                       <th className="text-nowrap">Project Name</th>
 
                       {projectNames.map((projectName) => (
-                        <th key={projectName.id} className="text-nowrap">{projectName.name}</th>
+                        <th key={projectName.id} className="text-nowrap">
+                          {projectName.name}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -307,29 +316,17 @@ function ProjectIndex() {
                         ) : (
                           projects.map((project, index) => (
                             <tr key={project.id}>
-                            <td className="text-center">{++index + (currentPage - 1) * perPage}</td>
+                              <td className="text-center">{++index + (currentPage - 1) * perPage}</td>
                               <td className="text-center">
                                 <Button size="sm" className=" mb-3" variant="danger" onClick={() => deleteProject(project.id)}>
                                   <i className="fa-solid fa-trash fa-2xs"></i>
                                 </Button>
                               </td>
-                              <td className="text-center">
-                              {project.status === 1 ? (
-                                <i className="fa-solid fa-check" style={{ color: 'green' }}></i>
-                              ) : (
-                                <i className="fa-solid fa-xmark" style={{ color: 'red' }}></i>
-                              )}
-                              
-                              </td>
-                              {/* <Link to={`/projectEdit/${project.id}`}>
-                                <td className="text-nowrap">{project.number}</td>
-                              </Link> */}
+                              <td className="text-center">{project.status === 1 ? <i className="fa-solid fa-check" style={{ color: "green" }}></i> : <i className="fa-solid fa-xmark" style={{ color: "red" }}></i>}</td>
+
                               <td className="text-nowrap">
                                 <Link to={`/projectEdit/${project.id}`}>{project.number}</Link>
                               </td>
-                              {/* <Link onClick={() => actionsHandler(project)}>
-                                <td className="text-nowrap">{project.number}</td>
-                              </Link> */}
 
                               <td className="text-nowrap">
                                 <Moment format="DD MMMM, YYYY">{project.created_at}</Moment>
@@ -348,12 +345,12 @@ function ProjectIndex() {
                   </tbody>
                 </Table>
                 <Row className="mt-5">
-                  <Col>
+                  <Col xs={12}>
                     <Button as={Link} to="/projectCreate" className="btn-add">
                       Add New
                     </Button>
                   </Col>
-                  <Col>
+                  <Col xs={12} className="mt-3">
                     <PaginationComponent currentPage={currentPage} perPage={perPage} total={total} onChange={(pageNumber) => fetchData(pageNumber)} position="end" />
                   </Col>
                 </Row>
@@ -379,6 +376,7 @@ function ProjectIndex() {
               </Col>
             </Row>
           </Modal.Body>
+          
           <Modal.Footer></Modal.Footer>
         </Modal>
       </LayoutAdmin>

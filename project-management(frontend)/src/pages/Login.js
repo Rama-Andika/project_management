@@ -2,8 +2,8 @@ import Api from "../api";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { Alert, Card, Col, Container, FormLabel, Row, Form, Button, Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { Alert, Card, Col, FormLabel, Row, Form, Button, Spinner } from "react-bootstrap";
 import imgLogin from "../assets/images/login.jpg";
 
 const Login = () => {
@@ -50,10 +50,6 @@ const Login = () => {
       });
   };
 
-  // if (email != "admin@admin.com") {
-  //   return <Navigate to="/" />;
-  // }
-
   return (
     <>
       <Row className="g-0">
@@ -61,12 +57,16 @@ const Login = () => {
           <img className="" src={imgLogin} style={{ height: "100vh", width: "100%", objectFit: "cover" }} alt="imgLogin" />
         </Col>
         <Col md={4} className="login-form">
-          <Card className="border-0 login-card">
-            <div className="mt-5">
-              <div className="text-center">
-                <h5 className="fw-bold">Project Management</h5>
-              </div>
-              {validation.message && <Alert variant="danger" className="mt-3 text-center">{validation.message}</Alert>}
+          <div className="text-center mt-5">
+            <h5 className="fw-bold">Project Management</h5>
+          </div>
+          <Card className="border-0 login-card flex flex-column">
+            <div className="mt-0">
+              {validation.message && (
+                <Alert variant="danger" className="mt-3 text-center">
+                  {validation.message}
+                </Alert>
+              )}
 
               <Form onSubmit={loginHandler} className="form-login pt-3">
                 <Form.Group className="mb-3">

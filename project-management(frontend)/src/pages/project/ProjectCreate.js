@@ -19,37 +19,26 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 function ProjectCreate() {
-  //title page
-
   document.title = "Project Create";
-
-  //state posts
 
   const [projectNames, setProjectNames] = useState([]);
   const [arrStatusProject, setArrStatusProject] = useState(Array.from(Array(projectNames.length)));
 
-  //form project
   const [name, setName] = useState("");
   const [id, setId] = useState(0);
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState("-");
 
-
-  //form project detail
   const [sequence, setSequence] = useState([]);
   const [maxSequence, setMaxSequence] = useState([]);
   const [arrProjectStatus, setArrProjectStatus] = useState(Array.from(Array(projectNames.length)));
   const [arrFile, setArrFile] = useState(Array.from(Array(projectNames.length)));
-  const [arrProjectNote, setArrProjectNote] = useState(Array.from(Array(projectNames.length)));
+  const [arrProjectNote, setArrProjectNote] = useState([]);
 
   const [validation, setValidation] = useState({});
 
   const [loading, setLoading] = useState(false);
 
-  //token
-
   const token = Cookies.get("token");
-
-  //function "fetchData"
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -94,24 +83,9 @@ function ProjectCreate() {
         return (updateProjectSequences[i] = updateProjectSequence);
       });
 
-      // const maxSequenceList = response.data.data.project_details.map((projectDetail, i) => {
-      //   const updateMaxSequence = response.data.data;
-
-      //   const updateMaxSequences = [...maxSequence];
-      //   updateMaxSequences[i] = updateMaxSequence;
-      //   setMaxSequence(updateMaxSequences);
-      // });
-
-      // const fileList = response.data.data.project_details.map((projectDetail, i) => {
-      //   const updateProjectFile = projectDetail.document_attch;
-      //   const updateProjectFiles = [...arrFile];
-      //   return (updateProjectFiles[i] = updateProjectFile);
-      // });
-
       setArrProjectStatus(statusList);
       setArrProjectNote(noteList);
       setSequence(sequenceList);
-      // setArrFile(fileList);
 
       setLoading(false);
     });
@@ -193,12 +167,13 @@ function ProjectCreate() {
       setArrProjectStatus(updateProjectStatues);
 
       const updateProjectNotes = [...arrProjectNote];
-      updateProjectNotes[index] = "";
+      updateProjectNotes[index] = "-";
       setArrProjectNote(updateProjectNotes);
     } else if (arrProjectNote[index] === undefined) {
       const updateProjectNotes = [...arrProjectNote];
-      updateProjectNotes[index] = "";
+      updateProjectNotes[index] = "-";
       setArrProjectNote(updateProjectNotes);
+      arrProjectNote[index] = "-";
     } else if (arrProjectStatus[index] === undefined) {
       const updateProjectStatues = [...arrProjectStatus];
       updateProjectStatues[index] = "";
@@ -217,7 +192,7 @@ function ProjectCreate() {
       setArrProjectNote(updateProjectNotes);
     }
 
-    if (arrProjectNote[index] !== undefined && arrProjectStatus[index] !== undefined) {
+    if (arrProjectStatus[index] !== undefined) {
       const formData = new FormData();
       formData.append("project_id", id);
       formData.append("project_name", name);
@@ -247,8 +222,6 @@ function ProjectCreate() {
           searchSequence(arrProjectStatus[index], index);
           searchMaxSequence(projectName, index);
 
-          // searchProject(projectName)
-
           setLoading(false);
           setValidation({});
 
@@ -270,39 +243,7 @@ function ProjectCreate() {
           updateProjectNotes[index] = updateProjectNote;
           setArrProjectNote(updateProjectNotes);
 
-          // const updateProjectFile = arrFile[index];
-          // const updateProjectFiles = [...arrFile];
-          // updateProjectFiles[index] = updateProjectFile;
-
-          // setArrFile(updateProjectFiles);
-
           fetchProjectById();
-
-          // projectNames.map((p, i) => {
-          //   handleProjectDetail(projectName + i, sequence + (i + 1));
-          // });
-
-          // if (statusProjectDetail) {
-          //   toast.success("Saved project detail succesffuly", {
-          //     duration: 4000,
-          //     position: "top-right",
-          //     style: {
-          //       borderRadius: "10px",
-          //       background: "#333",
-          //       color: "#fff",
-          //     },
-          //   });
-          // } else {
-          //   toast.error("Saved project detail failed", {
-          //     duration: 4000,
-          //     position: "top-right",
-          //     style: {
-          //       borderRadius: "10px",
-          //       background: "#333",
-          //       color: "#fff",
-          //     },
-          //   });
-          // }
         })
         .catch((error) => {
           toast.error("Saved project failed", {
@@ -324,20 +265,8 @@ function ProjectCreate() {
     setLoading(false);
   };
 
-  //hook
-
   const handleSubmitProject = (projectName, index) => {
-    //e.preventDefault();
-    // if(!status === "" && !file === "" && !projectNote === ""){
-
-    // }
-
     handleProject(projectName, index);
-
-    // if (project !== "") {
-    //   console.log(project);
-    //   handleProjectDetail(projectName);
-    // }
   };
 
   const downloadFile = async (fileDl) => {
@@ -354,8 +283,6 @@ function ProjectCreate() {
   };
 
   useEffect(() => {
-    //call function "fetchData"
-
     fetchProjectNames();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -415,11 +342,6 @@ function ProjectCreate() {
                                   <Button variant="link" className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
                                     <i class="fa-solid fa-download"></i> Download File
                                   </Button>
-
-                                  {/* <ProgressBar now={uploadProgress} label={`${uploadProgress}%`} animated /> */}
-                                  {/* <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
-                                    <i class="fa-solid fa-download"></i> Download File
-                                  </Button> */}
                                 </Form.Group>
                                 {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                               </>
@@ -429,8 +351,6 @@ function ProjectCreate() {
                               <Form.Label>Note</Form.Label>
                               <Form.Control as="textarea" rows={3} value={arrProjectNote[i]} onChange={(e) => handleChangeProjectNote(e, i)} />
                             </Form.Group>
-
-                            {arrProjectNote[i] === "" && <Alert variant="danger">The note field is required</Alert>}
 
                             <Button
                               variant="link"
@@ -447,11 +367,6 @@ function ProjectCreate() {
 
                       {projectNames.map((projectName, i) => (
                         <>
-                          {/* <Form.Control type="hidden" value={i+1} /> */}
-                          {/* <Form.Control type="hidden" value={++i} /> */}
-                          {/* {projectName.project_statuses.map((projectStatus)=>(
-                          
-                          ))} */}
                           {projectName.sequence !== 1 && sequence[i - 1] !== undefined && sequence[i - 1] === maxSequence[i - 1] && (
                             <>
                               <Card className="mb-5 border-0 rounded shadow-sm " style={{ backgroundColor: "#569cb8", display: "" }}>
@@ -478,9 +393,6 @@ function ProjectCreate() {
                                         <Button variant="link" className="mt-3" onClick={() => downloadFile(arrFile[i].name)} disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true}>
                                           <i class="fa-solid fa-download"></i> Download File
                                         </Button>
-                                        {/* <Button variant="link" href={arrFile[i]} download target="_blank" disabled={arrStatusProject[i] === true && arrFile[i] !== undefined ? false : true} style={{ textDecoration: "none" }}>
-                                          <i class="fa-solid fa-download"></i> Download File
-                                        </Button> */}
                                       </Form.Group>
                                       {validation.document_attch && <Alert variant="danger">{validation.document_attch}</Alert>}
                                     </>
@@ -491,7 +403,6 @@ function ProjectCreate() {
                                     <Form.Control as="textarea" rows={3} value={arrProjectNote[i]} onChange={(e) => handleChangeProjectNote(e, i)} />
                                   </Form.Group>
 
-                                  {arrProjectNote[i] === "" && <Alert variant="danger">The note field is required</Alert>}
                                   <Button
                                     variant="link"
                                     disabled={loading ? true : false}
@@ -507,7 +418,6 @@ function ProjectCreate() {
                           )}
                         </>
                       ))}
-                      {/* <Button type="submit">Simpan</Button> */}
                     </Form>
                   </Col>
                 </Row>

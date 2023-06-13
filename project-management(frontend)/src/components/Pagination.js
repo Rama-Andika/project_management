@@ -1,5 +1,3 @@
-//import pagination
-
 import Pagination from "react-js-pagination";
 
 function PaginationComponent(props) {

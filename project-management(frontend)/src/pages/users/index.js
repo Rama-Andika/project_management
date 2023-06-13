@@ -40,6 +40,7 @@ const UsersIndex = () => {
   const [loading, setLoading] = useState(false);
   const [validation, setValidation] = useState({});
 
+
   const token = Cookies.get("token");
 
   const fetchData = async (pageNumber, searchData) => {
@@ -87,6 +88,7 @@ const UsersIndex = () => {
     e.preventDefault();
 
     setLoading(true);
+
 
     const formData = new FormData();
 
@@ -144,11 +146,13 @@ const UsersIndex = () => {
             },
           });
           setLoading(false);
+        
           handleCloseModal();
           fetchData();
         })
         .catch((error) => {
           setLoading(false);
+          
           setValidation(error.response.data);
         });
     }
@@ -252,7 +256,7 @@ const UsersIndex = () => {
             <Card.Body>
               <Row>
                 <Col xs={10}>
-                  <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name='name, username, or email'/>
+                  <Search onSubmit={searchHandler} value={q} onChange={(e) => setQ(e.target.value)} name="name, username, or email" />
                 </Col>
                 <Col xs={2}>
                   <Addbutton size="md" onClick={handleShowModal} />
@@ -276,7 +280,6 @@ const UsersIndex = () => {
                   ) : (
                     users.map((user, index) => (
                       <tr key={index}>
-                        {/* <td>{++index + (currentPage - 1) * perPage}</td> */}
                         <td>{user.name}</td>
                         <td>{user.username}</td>
                         <td>{user.email}</td>
@@ -293,15 +296,12 @@ const UsersIndex = () => {
                   )}
                 </tbody>
               </Table>
-              <PaginationComponent
-                currentPage={currentPage}
-                perPage={perPage}
-                total={total}
-                onChange={(pageNumber) => {
-                  fetchData(pageNumber);
-                }}
-                position="end"
-              />
+              <Row className="mt-4">
+                <Col className="text-nowrap">Total : {total}</Col>
+                <Col>
+                  <PaginationComponent currentPage={currentPage} perPage={perPage} total={total} onChange={(pageNumber) => fetchData(pageNumber)} position="end" />
+                </Col>
+              </Row>
             </Card.Body>
           </Card>
         </Col>
@@ -315,7 +315,7 @@ const UsersIndex = () => {
           <Form onSubmit={storeUsers}>
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
-              <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} />
+              <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)}/>
             </Form.Group>
             {validation.name && <Alert variant="danger">{validation.name}</Alert>}
             <Form.Group className="mb-3">
